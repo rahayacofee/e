@@ -82,7 +82,7 @@ jobs:
             exit 1
           fi
 
-          npm install --no-save @capacitor/core @capacitor/cli @capacitor/android
+          npm install --no-save --legacy-peer-deps @capacitor/core @capacitor/cli @capacitor/android
 
           if [ ! -f capacitor.config.json ] && [ ! -f capacitor.config.ts ]; then
             cat > capacitor.config.json <<'EOF'
