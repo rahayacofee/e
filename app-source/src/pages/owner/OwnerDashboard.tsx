@@ -226,12 +226,12 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ onNavigate }) =>
                     <span className="w-5 h-5 rounded-full bg-teal-50 text-teal-800 font-bold flex items-center justify-center text-[10px]">
                       {idx + 1}
                     </span>
-                    <span className="font-bold text-slate-800">{item.name}</span>
+                    <span className="font-bold text-slate-800">{item.name || item.product_name || "Menu"}</span>
                   </div>
                   <div className="text-right">
                     <span className="font-extrabold text-teal-950">{item.quantity} cup</span>
                     <span className="text-[11px] text-slate-400 ml-2">
-                      (Rp {item.revenue.toLocaleString('id-ID')})
+                      (Rp {Number(item.revenue ?? item.total ?? 0).toLocaleString('id-ID')})
                     </span>
                   </div>
                 </div>
