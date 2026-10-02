@@ -26,7 +26,17 @@ async function request<T>(path: string, method = 'GET', body: any = {}): Promise
   };
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const response = await fetch(API_URL, { method, headers, body: JSON.stringify({ path, method, body }) });
+  const requestInit: RequestInit = { method, headers };
+  // GET/HEAD requests must not carry a request body. The Rahaya API envelope is
+  // sent in the body only for methods that support one; query/path routing for
+  // GET requests is handled by the server from the JSON-free request headers.
+  if (method !== 'GET' && method !== 'HEAD') {
+    requestInit.body = JSON.stringify({ path, method, body });
+  } else {
+    headers['X-Rahaya-Path'] = path;
+    headers['X-Rahaya-Method'] = method;
+  }
+  const response = await fetch(API_URL, requestInit);
   const data = await response.json().catch(() => ({}));
   if (!response.ok || data?.error) throw new Error(data?.error || `Server Rahaya mengembalikan HTTP ${response.status}.`);
   return data as T;
