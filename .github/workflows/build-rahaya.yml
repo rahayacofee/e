@@ -50,6 +50,17 @@ jobs:
           set -euo pipefail
           if [ -f package-lock.json ]; then npm ci --legacy-peer-deps; else npm install --legacy-peer-deps; fi
 
+
+      - name: Inspect Rahaya source
+        working-directory: ${{ steps.project.outputs.root }}
+        run: |
+          set -euo pipefail
+          echo '--- package.json ---'
+          cat package.json
+          for f in src/components/pos/ReceiptModal.tsx src/components/layout/RahayaLogo.tsx src/services/api.ts; do
+            if [ -f "$f" ]; then echo "--- $f ---"; sed -n '1,260p' "$f"; fi
+          done
+
       - name: Install Supabase client
         working-directory: ${{ steps.project.outputs.root }}
         run: npm install --save @supabase/supabase-js
