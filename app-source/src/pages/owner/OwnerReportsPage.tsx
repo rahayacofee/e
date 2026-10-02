@@ -193,15 +193,15 @@ export const OwnerReportsPage: React.FC = () => {
     setIsSyncingSupabase(true);
     setSupabaseFeedback(null);
     try {
-      const res = await api.database.syncAll();
+      await fetchReports();
       setSupabaseFeedback({
         type: 'success',
-        message: res.message || 'Seluruh data berhasil disinkronisasi ke Supabase PostgreSQL online!',
+        message: 'Laporan dimuat ulang langsung dari Supabase PostgreSQL.',
       });
     } catch (err: any) {
       setSupabaseFeedback({
         type: 'error',
-        message: err.message || 'Gagal sinkronisasi data ke Supabase.',
+        message: err.message || 'Gagal memuat ulang data Supabase.',
       });
     } finally {
       setIsSyncingSupabase(false);
@@ -221,16 +221,16 @@ export const OwnerReportsPage: React.FC = () => {
             <button
               onClick={() => setShowSupabaseModal(true)}
               className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-colors ${
-                supabaseStatus?.supabase_configured
+                supabaseStatus?.supabase?.connected
                   ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
                   : 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
               }`}
             >
               <Database className="w-3 h-3" />
               <span>
-                {supabaseStatus?.supabase_configured
+                {supabaseStatus?.supabase?.connected
                   ? 'Supabase PostgreSQL: Terhubung'
-                  : 'Koneksikan ke Supabase'}
+                  : 'Supabase PostgreSQL: Tidak Terhubung'}
               </span>
             </button>
           </div>
@@ -669,12 +669,12 @@ export const OwnerReportsPage: React.FC = () => {
                 <div>
                   <span className="text-[10px] text-slate-400 font-bold block uppercase">Status Saat Ini</span>
                   <span className="font-bold text-slate-900">
-                    {supabaseStatus?.supabase_configured
+                    {supabaseStatus?.supabase?.connected
                       ? '🟢 Terhubung ke Supabase PostgreSQL Online'
-                      : '🟡 Belum Terhubung'}
+                      : '🔴 Tidak Terhubung'}
                   </span>
                 </div>
-                {supabaseStatus?.supabase_configured && (
+                {supabaseStatus?.supabase?.connected && (
                   <button
                     type="button"
                     onClick={handleSyncAllSupabase}
@@ -713,6 +713,7 @@ export const OwnerReportsPage: React.FC = () => {
                 </div>
               )}
 
+              {false && (
               <form onSubmit={handleConfigureSupabase} className="space-y-3">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
@@ -772,6 +773,7 @@ export const OwnerReportsPage: React.FC = () => {
                   </button>
                 </div>
               </form>
+              )}
             </div>
           </div>
         </div>
