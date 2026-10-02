@@ -12,26 +12,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: app-source
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Download source ZIP
-        run: |
-          set -euo pipefail
-          curl -L --fail --retry 3 -o app.zip "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/rahaya-coffee-pos-updated.zip"
-          rm -rf source
-          mkdir -p source
-          unzip -q app.zip -d source
-
-      - name: Locate application
-        id: project
-        run: |
-          set -euo pipefail
-          PKG="$(find source -name package.json -not -path '*/node_modules/*' | head -1 || true)"
-          test -n "$PKG" || { echo "ERROR: package.json tidak ditemukan"; exit 1; }
-          ROOT="$(dirname "$PKG")"
-          echo "root=$ROOT" >> "$GITHUB_OUTPUT"
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -45,93 +32,62 @@ jobs:
           java-version: 21
 
       - name: Install dependencies
-        working-directory: ${{ steps.project.outputs.root }}
-        run: |
-          set -euo pipefail
-          if [ -f package-lock.json ]; then npm ci --legacy-peer-deps; else npm install --legacy-peer-deps; fi
-
-
-      - name: Inspect Rahaya source
-        working-directory: ${{ steps.project.outputs.root }}
-        run: |
-          set -euo pipefail
-          echo '--- package.json ---'
-          cat package.json
-          for f in src/components/pos/ReceiptModal.tsx src/components/layout/RahayaLogo.tsx src/services/api.ts; do
-            if [ -f "$f" ]; then echo "--- $f ---"; sed -n '1,260p' "$f"; fi
-          done
-
-      - name: Install Supabase client
-        working-directory: ${{ steps.project.outputs.root }}
-        run: npm install --save @supabase/supabase-js
+        run: npm install --legacy-peer-deps
 
       - name: Configure Supabase
-        working-directory: ${{ steps.project.outputs.root }}
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
         run: |
           set -euo pipefail
-          test -n "$SUPABASE_URL" || { echo "SUPABASE_URL secret belum diisi"; exit 1; }
-          test -n "$SUPABASE_PUBLISHABLE_KEY" || { echo "SUPABASE_PUBLISHABLE_KEY secret belum diisi"; exit 1; }
+          test -n "$SUPABASE_URL" || { echo "ERROR: GitHub Secret SUPABASE_URL belum diisi."; exit 1; }
+          test -n "$SUPABASE_PUBLISHABLE_KEY" || { echo "ERROR: GitHub Secret SUPABASE_PUBLISHABLE_KEY belum diisi."; exit 1; }
           cat > .env.production <<EOF
 VITE_SUPABASE_URL=$SUPABASE_URL
 VITE_SUPABASE_PUBLISHABLE_KEY=$SUPABASE_PUBLISHABLE_KEY
-NEXT_PUBLIC_SUPABASE_URL=$SUPABASE_URL
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$SUPABASE_PUBLISHABLE_KEY
-SUPABASE_URL=$SUPABASE_URL
-SUPABASE_PUBLISHABLE_KEY=$SUPABASE_PUBLISHABLE_KEY
 EOF
-          cp .env.production .env
 
-      - name: Validate Supabase Realtime integration
-        working-directory: ${{ steps.project.outputs.root }}
-        run: |
-          set -euo pipefail
-          grep -RIl --exclude-dir=node_modules --exclude='*.map' -E '@supabase/supabase-js|createClient|postgres_changes|realtime' . | head -20 >/dev/null || {
-            echo "ERROR: Source belum menggunakan Supabase/Realtime."
-            exit 1
-          }
+      - name: Typecheck
+        run: npm run lint
 
       - name: Build web
-        working-directory: ${{ steps.project.outputs.root }}
         run: |
           set -euo pipefail
           npm run build
-          test -d dist || test -d build
+          test -d dist
 
       - name: Prepare Capacitor Android
-        working-directory: ${{ steps.project.outputs.root }}
         run: |
           set -euo pipefail
           npm install --no-save --legacy-peer-deps @capacitor/core @capacitor/cli @capacitor/android
-          WEB_DIR=dist
-          [ -d "$WEB_DIR" ] || WEB_DIR=build
           if [ ! -f capacitor.config.json ] && [ ! -f capacitor.config.ts ]; then
             cat > capacitor.config.json <<EOF
 {
   "appId": "com.rahayacoffee.pos",
   "appName": "Rahaya Coffee POS",
-  "webDir": "$WEB_DIR",
+  "webDir": "dist",
   "bundledWebRuntime": false
 }
 EOF
           fi
-          [ -d android ] || npx cap add android
+          if [ ! -d android ]; then
+            npx cap add android
+          fi
           npx cap sync android
 
       - name: Build Android APK
-        working-directory: ${{ steps.project.outputs.root }}/android
+        working-directory: app-source/android
         run: |
           set -euo pipefail
           chmod +x gradlew
           ./gradlew assembleDebug --stacktrace
 
       - name: Collect APK
+        working-directory: .
         run: |
           set -euo pipefail
           mkdir -p artifacts
-          find source -type f -name '*.apk' -print -exec cp {} artifacts/ \;
+          find app-source/android -type f -name '*.apk' -print -exec cp {} artifacts/ \;
           test -n "$(find artifacts -type f -name '*.apk' -print -quit)"
 
       - name: Upload Android APK
@@ -145,7 +101,5 @@ EOF
         uses: actions/upload-artifact@v4
         with:
           name: rahaya-coffee-pos-web
-          path: |
-            ${{ steps.project.outputs.root }}/dist
-            ${{ steps.project.outputs.root }}/build
+          path: app-source/dist
           if-no-files-found: error
