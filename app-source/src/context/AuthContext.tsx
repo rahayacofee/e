@@ -47,7 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Do not destroy a valid local session because of a temporary network/API error.
       // Only clear the token when the backend explicitly reports an invalid/expired session.
       const message = String(err?.message || '');
-      const sessionInvalid = /Sesi tidak valid|Akses ditolak|Sesi.*kedaluwarsa|Akun.*tidak aktif/i.test(message);
+      const sessionInvalid = Number(err?.status) === 401;
       if (sessionInvalid) clearSession();
       else console.warn('[Rahaya Auth] refreshMe failed without clearing session:', message);
     } finally {
