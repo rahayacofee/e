@@ -45,6 +45,7 @@ export const api = {
   master: {
     getDashboard: () => request<any>('/master/dashboard'),
     getOwners: () => request<any>('/master/owners'),
+    getBusinesses: () => request<any>('/master/businesses'),
     createOwner: (data: any) => request<any>('/master/owners', 'POST', data),
     updateOwner: (id: string, data: any) => request<any>(`/master/owners/${id}`, 'PUT', data),
     toggleOwnerStatus: (id: string, status: 'ACTIVE' | 'INACTIVE') =>
