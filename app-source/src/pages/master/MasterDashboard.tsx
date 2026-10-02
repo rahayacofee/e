@@ -12,12 +12,17 @@ export const MasterDashboard: React.FC<MasterDashboardProps> = ({ onNavigateToOw
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [owners, setOwners] = useState<any[]>([]);
 
   const fetchDashboard = async () => {
     setIsLoading(true);
     try {
-      const res = await api.master.getDashboard();
-      setData(res);
+      const [res, ownerRes] = await Promise.all([
+        api.master.getDashboard(),
+        api.master.getOwners(),
+      ]);
+      setData({ ...res, recent_owners: Array.isArray(ownerRes.owners) && ownerRes.owners.length ? ownerRes.owners.slice(0, 5) : (res.recent_owners || []) });
+      setOwners(Array.isArray(ownerRes.owners) ? ownerRes.owners : []);
     } catch (err: any) {
       setError(err.message || 'Gagal memuat dashboard master');
     } finally {
@@ -117,6 +122,7 @@ export const MasterDashboard: React.FC<MasterDashboardProps> = ({ onNavigateToOw
               <tr>
                 <th className="py-3 px-4">Nama Owner / Username</th>
                 <th className="py-3 px-4">Nama Bisnis & Kode</th>
+                <th className="py-3 px-4">Owner di Outlet</th>
                 <th className="py-3 px-4">Kontak</th>
                 <th className="py-3 px-4">Status</th>
                 <th className="py-3 px-4">Tanggal Daftar</th>
@@ -136,6 +142,11 @@ export const MasterDashboard: React.FC<MasterDashboardProps> = ({ onNavigateToOw
                     <div className="text-[10px] text-slate-400 font-mono">
                       {owner.business?.code || '-'}
                     </div>
+                  </td>
+                  <td className="py-3 px-4">
+                    <span className="inline-flex px-2 py-1 rounded-lg bg-blue-50 text-blue-800 font-semibold">
+                      {owner.business?.owners_count ?? owners.filter((x: any) => x.business_id === owner.business_id).length} Owner
+                    </span>
                   </td>
                   <td className="py-3 px-4 text-slate-600">{owner.phone || '-'}</td>
                   <td className="py-3 px-4">
