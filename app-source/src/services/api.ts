@@ -34,7 +34,7 @@ async function request<T>(path: string, method = 'POST', body: any = {}): Promis
     body: JSON.stringify({ path, method, body }),
   });
   const data = await response.json().catch(() => ({}));
-  if (!response.ok || data?.error) throw new Error(data?.error || `Server Rahaya mengembalikan HTTP ${response.status}.`);
+  if (!response.ok || data?.error) { const error: any = new Error(data?.error || `Server Rahaya mengembalikan HTTP ${response.status}.`); error.status = response.status; throw error; }
   return data as T;
 }
 
