@@ -156,7 +156,7 @@ ${business.footer || 'Terima kasih atas kunjungan Anda!'}
             <div className="text-center space-y-1 pb-3 border-b border-dashed border-slate-300">
               <div className="flex justify-center mb-1">
                 <img
-                  src={new URL('/icon.svg', import.meta.env.BASE_URL).href}
+                  src={`${import.meta.env.BASE_URL}icon.svg`}
                   alt="Rahaya Coffee"
                   width={56}
                   height={56}
