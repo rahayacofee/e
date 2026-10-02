@@ -1,19 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <rect width="512" height="512" rx="128" fill="#004d40"/>
-  <circle cx="256" cy="256" r="210" stroke="#00897b" stroke-width="12" fill="#ffffff"/>
-  <circle cx="256" cy="256" r="190" stroke="#d97706" stroke-width="6" fill="#ffffff"/>
-  <!-- Coffee Cup -->
-  <path d="M170 190 C170 190, 150 290, 256 290 C362 290, 342 190, 342 190 Z" fill="#ffffff" stroke="#004d40" stroke-width="14"/>
-  <ellipse cx="256" cy="190" rx="86" ry="24" fill="#004d40"/>
-  <ellipse cx="256" cy="190" rx="74" ry="18" fill="#6d4c41"/>
-  <!-- Steam -->
-  <path d="M210 180 C195 150, 210 120, 240 90 C250 80, 260 70, 255 55" stroke="#004d40" stroke-width="8" stroke-linecap="round" fill="none"/>
-  <path d="M250 180 C240 155, 255 135, 275 110 C285 95, 290 80, 280 65" stroke="#d97706" stroke-width="8" stroke-linecap="round" fill="none"/>
-  <!-- Handle -->
-  <path d="M338 200 C370 200, 395 220, 390 255 C385 285, 355 285, 330 275" stroke="#004d40" stroke-width="14" stroke-linecap="round" fill="none"/>
-  <!-- Saucer -->
-  <path d="M150 290 C200 310, 312 310, 362 290" stroke="#004d40" stroke-width="14" stroke-linecap="round"/>
-  <!-- Text -->
-  <text x="256" y="370" font-family="Arial, sans-serif" font-weight="900" font-size="44" fill="#004d40" text-anchor="middle" letter-spacing="4">RAHAYA</text>
-  <text x="256" y="415" font-family="Arial, sans-serif" font-weight="700" font-size="24" fill="#d97706" text-anchor="middle" letter-spacing="8">COFFEE POS</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="512" height="512">
+  <rect width="240" height="240" rx="52" fill="#ffffff"/>
+  <circle cx="120" cy="120" r="114" fill="#ffffff" stroke="#0F2B5C" stroke-width="8"/>
+  <circle cx="120" cy="120" r="102" fill="#ffffff" stroke="#DC2626" stroke-width="3"/>
+  <path d="M102 85C95 72 100 56 112 44C118 38 126 31 124 23C136 34 135 48 126 58C117 68 114 77 116 85C110 85 106 85 102 85Z" fill="#0F2B5C"/>
+  <path d="M115 85C114 74 121 66 128 58C134 51 138 43 133 34C143 42 142 53 136 62C129 70 126 78 127 85H115Z" fill="#DC2626"/>
+  <path d="M80 87C80 87 72 135 120 135C168 135 160 87 160 87H80Z" fill="#fff" stroke="#0F2B5C" stroke-width="6"/>
+  <ellipse cx="120" cy="87" rx="39" ry="11" fill="#0F2B5C"/>
+  <ellipse cx="120" cy="87" rx="34" ry="8" fill="#582900"/>
+  <ellipse cx="120" cy="88" rx="27" ry="5" fill="#8B4513"/>
+  <path d="M158 92C172 92 184 102 181 117C178 130 165 131 154 127" stroke="#0F2B5C" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <path d="M72 132C95 141 145 141 168 132" stroke="#0F2B5C" stroke-width="6" stroke-linecap="round"/>
+  <g fill="#0F2B5C" font-family="Arial, sans-serif" font-weight="900" text-anchor="middle">
+    <text x="120" y="168" font-size="29" letter-spacing="1">RAHAYA</text>
+  </g>
+  <g fill="#0F2B5C" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">
+    <text x="120" y="185" font-size="10" letter-spacing="3">• COFFEE •</text>
+  </g>
+  <path d="M78 165L87 151M132 165L141 151M182 165L191 151" stroke="#DC2626" stroke-width="3" stroke-linecap="round"/>
 </svg>
