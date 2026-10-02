@@ -1,13 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { LoginPage } from './pages/login/LoginPage';
 import { AppLayout } from './components/layout/AppLayout';
 import { LoadingState } from './components/common/LoadingState';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { startRealtimeSync } from './services/api';
 
 const AppContent: React.FC = () => {
   const { user, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!user) return;
+    return startRealtimeSync(user.business_id || null, user.role === 'MASTER');
+  }, [user?.id, user?.business_id, user?.role]);
 
   if (isLoading) {
     return (
