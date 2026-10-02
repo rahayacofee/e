@@ -1,0 +1,100 @@
+name: Build Rahaya Coffee POS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download source ZIP
+        run: |
+          curl -L --fail --retry 3 -o app.zip "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/rahaya-coffee-pos-updated.zip"
+          unzip -q app.zip -d source
+          echo "SOURCE TREE:"
+          find source -maxdepth 3 -type f | sort | head -300
+
+      - name: Locate project
+        id: project
+        shell: bash
+        run: |
+          PKG="$(find source -name package.json -not -path '*/node_modules/*' | head -1 || true)"
+          if [ -z "$PKG" ]; then
+            echo "No package.json found"
+            exit 1
+          fi
+          ROOT="$(dirname "$PKG")"
+          echo "root=$ROOT" >> "$GITHUB_OUTPUT"
+          echo "Project root: $ROOT"
+          cat "$PKG"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: ${{ steps.project.outputs.root }}/package-lock.json
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install dependencies
+        working-directory: ${{ steps.project.outputs.root }}
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+      - name: Build Android
+        working-directory: ${{ steps.project.outputs.root }}
+        shell: bash
+        run: |
+          if [ -f gradlew ]; then
+            chmod +x gradlew
+            ./gradlew assembleDebug --stacktrace
+          elif [ -d android ] && [ -f android/gradlew ]; then
+            chmod +x android/gradlew
+            cd android
+            ./gradlew assembleDebug --stacktrace
+          elif npm exec --yes cap -- --version >/dev/null 2>&1 || grep -q '"@capacitor/android"' package.json 2>/dev/null; then
+            npx cap sync android
+            chmod +x android/gradlew
+            cd android
+            ./gradlew assembleDebug --stacktrace
+          elif grep -q '"expo"' package.json 2>/dev/null; then
+            npx expo prebuild --non-interactive
+            chmod +x android/gradlew
+            cd android
+            ./gradlew assembleDebug --stacktrace
+          else
+            echo "Unable to identify an Android build path."
+            echo "Package scripts:"
+            node -e "console.log(require('./package.json').scripts || {})"
+            exit 1
+          fi
+
+      - name: Collect APK
+        if: success()
+        run: |
+          mkdir -p artifacts
+          find source -type f -name '*.apk' -print -exec cp {} artifacts/ \;
+          ls -lah artifacts
+          test -n "$(find artifacts -type f -name '*.apk' -print -quit)"
+
+      - name: Upload APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rahaya-coffee-pos-apk
+          path: artifacts/*.apk
+          if-no-files-found: error
