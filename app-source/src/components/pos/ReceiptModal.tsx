@@ -156,7 +156,15 @@ ${business.footer || 'Terima kasih atas kunjungan Anda!'}
             {/* Header */}
             <div className="text-center space-y-1 pb-3 border-b border-dashed border-slate-300">
               <div className="flex justify-center mb-1">
-                <RahayaLogo size="sm" showText={false} />
+                <img
+                  src={new URL('/icon.svg', import.meta.env.BASE_URL).href}
+                  alt="Rahaya Coffee"
+                  width={56}
+                  height={56}
+                  className="w-14 h-14 object-contain print:block"
+                  loading="eager"
+                  decoding="sync"
+                />
               </div>
               <h4 className="font-extrabold text-sm tracking-tight text-slate-950 uppercase">
                 {business.name}
