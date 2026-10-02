@@ -10,7 +10,6 @@ import {
   Sliders,
   RotateCcw,
 } from 'lucide-react';
-import { RahayaLogo } from '../layout/RahayaLogo';
 import { bluetoothPrinter } from '../../services/bluetoothPrinter';
 import { BluetoothPrinterModal } from './BluetoothPrinterModal';
 
