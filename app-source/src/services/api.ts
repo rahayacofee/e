@@ -18,7 +18,7 @@ export function setAuthToken(token: string | null) {
   else localStorage.removeItem(TOKEN_KEY);
 }
 
-async function request<T>(path: string, method = 'POST', body: any = {}): Promise<T> {
+async function request<T>(path: string, method = 'GET', body: any = {}): Promise<T> {
   const token = getAuthToken();
   const headers: Record<string,string> = {
     'Content-Type': 'application/json',
