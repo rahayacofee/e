@@ -32,10 +32,7 @@ export const OwnerSettingsPage: React.FC = () => {
 
   // Supabase integration state
   const [supabaseStatus, setSupabaseStatus] = useState<any>(null);
-  const [supabaseUrl, setSupabaseUrl] = useState<string>('');
-  const [supabaseKey, setSupabaseKey] = useState<string>('');
-  const [isConfiguringSupabase, setIsConfiguringSupabase] = useState<boolean>(false);
-  const [supabaseFeedback, setSupabaseFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [isRefreshingDb, setIsRefreshingDb] = useState<boolean>(false);
 
   const fetchSettings = async () => {
     setIsLoading(true);
@@ -84,31 +81,18 @@ export const OwnerSettingsPage: React.FC = () => {
     }
   };
 
-  const handleConnectSupabase = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!supabaseUrl || !supabaseKey) return;
-    setIsConfiguringSupabase(true);
-    setSupabaseFeedback(null);
+  const refreshDatabaseStatus = async () => {
+    setIsRefreshingDb(true);
     try {
-      const res = await api.database.configure({
-        supabase_url: supabaseUrl.trim(),
-        supabase_key: supabaseKey.trim(),
-      });
-      setSupabaseFeedback({
-        type: 'success',
-        message: `${res.message} ${res.test_result?.message || ''}`,
-      });
-      const updated = await api.database.getStatus();
-      setSupabaseStatus(updated);
+      const status = await api.database.getStatus();
+      setSupabaseStatus(status);
     } catch (err: any) {
-      setSupabaseFeedback({
-        type: 'error',
-        message: err.message || 'Gagal menghubungkan ke Supabase.',
-      });
+      setSupabaseStatus({ supabase: { connected: false, error: err.message || 'Koneksi PostgreSQL tidak dapat diperiksa.' } });
     } finally {
-      setIsConfiguringSupabase(false);
+      setIsRefreshingDb(false);
     }
   };
+
 
   if (isLoading) return <LoadingState message="Memuat pengaturan outlet..." />;
 
@@ -138,90 +122,51 @@ export const OwnerSettingsPage: React.FC = () => {
       {/* Supabase PostgreSQL Integration Card */}
       <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs space-y-4">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-            <Database className="w-4 h-4 text-teal-800" />
-            <span>Koneksi Supabase PostgreSQL Online</span>
-          </h3>
-          <span
-            className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${
-              supabaseStatus?.supabase_configured
-                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                : 'bg-amber-50 text-amber-800 border-amber-200'
-            }`}
-          >
-            {supabaseStatus?.supabase_configured ? '🟢 Terhubung' : '🟡 Belum Terhubung'}
+          <div>
+            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <Database className="w-4 h-4 text-teal-800" />
+              <span>Koneksi Supabase PostgreSQL</span>
+            </h3>
+            <p className="text-[10px] text-slate-500 mt-1">Koneksi menggunakan konfigurasi Supabase aplikasi secara otomatis. Tidak perlu memasukkan URL atau key lagi.</p>
+          </div>
+          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${
+            supabaseStatus?.supabase?.connected
+              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+              : 'bg-rose-50 text-rose-800 border-rose-200'
+          }`}>
+            {supabaseStatus?.supabase?.connected ? '🟢 Terhubung' : '🔴 Tidak Terhubung'}
           </span>
         </div>
 
-        {supabaseFeedback && (
-          <div
-            className={`p-3 rounded-xl text-xs flex items-start gap-2 border ${
-              supabaseFeedback.type === 'success'
-                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                : 'bg-rose-50 text-rose-800 border-rose-200'
-            }`}
-          >
-            {supabaseFeedback.type === 'success' ? (
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-            ) : (
-              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-            )}
-            <span>{supabaseFeedback.message}</span>
+        <div className="grid grid-cols-2 gap-3 text-xs">
+          <div className="rounded-xl bg-slate-50 border border-slate-100 p-3">
+            <div className="text-[10px] text-slate-400 uppercase font-bold">Storage</div>
+            <div className="font-bold text-slate-700 mt-1">{supabaseStatus?.supabase?.storage_engine || 'Supabase PostgreSQL'}</div>
+          </div>
+          <div className="rounded-xl bg-slate-50 border border-slate-100 p-3">
+            <div className="text-[10px] text-slate-400 uppercase font-bold">Outlet</div>
+            <div className="font-bold text-slate-700 mt-1">{form.name || 'Outlet aktif'}</div>
+          </div>
+        </div>
+
+        {supabaseStatus?.supabase?.error && (
+          <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs">
+            {supabaseStatus.supabase.error}
           </div>
         )}
 
-        <form onSubmit={handleConnectSupabase} className="space-y-3 text-xs">
-          <div>
-            <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
-              Supabase Project URL
-            </label>
-            <input
-              type="url"
-              required
-              value={supabaseUrl}
-              onChange={(e) => setSupabaseUrl(e.target.value)}
-              placeholder="https://xyzcompany.supabase.co"
-              className="w-full px-3 py-2 border rounded-xl border-slate-200 font-mono bg-slate-50 focus:bg-white text-xs"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
-              Supabase Anon / Public Key
-            </label>
-            <input
-              type="password"
-              required
-              value={supabaseKey}
-              onChange={(e) => setSupabaseKey(e.target.value)}
-              placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-              className="w-full px-3 py-2 border rounded-xl border-slate-200 font-mono bg-slate-50 focus:bg-white text-xs"
-            />
-          </div>
-
-          <div className="flex items-center justify-between pt-1">
-            <span className="text-[10px] text-slate-400">
-              🔒 Hanya kunci Public/Anon yang digunakan. Multi-tenant terisolasi aman.
-            </span>
-            <button
-              type="submit"
-              disabled={isConfiguringSupabase}
-              className="px-4 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-xs disabled:opacity-50"
-            >
-              {isConfiguringSupabase ? (
-                <>
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  <span>Menyambungkan...</span>
-                </>
-              ) : (
-                <>
-                  <Database className="w-3.5 h-3.5" />
-                  <span>Koneksikan ke Supabase</span>
-                </>
-              )}
-            </button>
-          </div>
-        </form>
+        <div className="flex items-center justify-between pt-1">
+          <span className="text-[10px] text-slate-400">Data Owner dan Cashier tersimpan langsung di PostgreSQL outlet yang sedang aktif.</span>
+          <button
+            type="button"
+            onClick={refreshDatabaseStatus}
+            disabled={isRefreshingDb}
+            className="px-4 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 disabled:opacity-50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshingDb ? 'animate-spin' : ''}`} />
+            {isRefreshingDb ? 'Memeriksa...' : 'Periksa Koneksi'}
+          </button>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
