@@ -75,6 +75,8 @@ jobs:
           fi
           test -d android || npx cap add android
           npx cap sync android
+          bash scripts/prepare-android-bluetooth.sh
+          npx cap sync android
 
       - name: Apply Rahaya Coffee launcher icon
         working-directory: app-source
