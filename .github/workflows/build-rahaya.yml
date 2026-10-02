@@ -31,14 +31,9 @@ jobs:
 
       - name: Configure Supabase
         working-directory: app-source
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
         run: |
           set -e
-          test -n "$SUPABASE_URL"
-          test -n "$SUPABASE_PUBLISHABLE_KEY"
-          printf 'VITE_SUPABASE_URL=%s\nVITE_SUPABASE_PUBLISHABLE_KEY=%s\n' "$SUPABASE_URL" "$SUPABASE_PUBLISHABLE_KEY" > .env.production
+          printf '%s\n' 'VITE_SUPABASE_URL=https://bmdrwuafownanwlxzqny.supabase.co' 'VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_Eov65bGxCC1Z8OnGReqq8Q_fs0E6FGm' > .env.production
 
       - name: Typecheck
         working-directory: app-source
