@@ -256,6 +256,58 @@ class BluetoothPrinterService {
     return truncatedLeft + spaces + right;
   }
 
+  /** Convert the Rahaya SVG logo to a monochrome ESC/POS raster image. */
+  private async getLogoRasterCommand(maxDots: number): Promise<Uint8Array | null> {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return null;
+    try {
+      const src = new URL('/icon.svg', import.meta.env.BASE_URL).href;
+      const response = await fetch(src, { cache: 'force-cache' });
+      if (!response.ok) return null;
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      try {
+        const image = new Image();
+        image.decoding = 'sync';
+        await new Promise<void>((resolve, reject) => {
+          image.onload = () => resolve();
+          image.onerror = () => reject(new Error('Logo gagal dimuat'));
+          image.src = url;
+        });
+
+        const width = Math.min(this.paperWidth === '58mm' ? 240 : 320, maxDots);
+        const height = Math.max(1, Math.round((image.naturalHeight / image.naturalWidth) * width));
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        if (!ctx) return null;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(image, 0, 0, width, height);
+        const pixels = ctx.getImageData(0, 0, width, height).data;
+        const widthBytes = Math.ceil(width / 8);
+        const data = new Uint8Array(widthBytes * height);
+        for (let y = 0; y < height; y++) {
+          for (let x = 0; x < width; x++) {
+            const i = (y * width + x) * 4;
+            const alpha = pixels[i + 3];
+            const gray = (pixels[i] * 299 + pixels[i + 1] * 587 + pixels[i + 2] * 114) / 1000;
+            if (alpha > 32 && gray < 180) data[y * widthBytes + (x >> 3)] |= 0x80 >> (x & 7);
+          }
+        }
+        const header = new Uint8Array([0x1d, 0x76, 0x30, 0x00, widthBytes & 0xff, (widthBytes >> 8) & 0xff, height & 0xff, (height >> 8) & 0xff]);
+        const command = new Uint8Array(header.length + data.length);
+        command.set(header);
+        command.set(data, header.length);
+        return command;
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    } catch {
+      return null;
+    }
+  }
+
   /**
    * Build ESC/POS bytecode for sample test receipt
    */
@@ -287,7 +339,15 @@ class BluetoothPrinterService {
 
     const encoder = new TextEncoder();
     const bytes = encoder.encode(text);
-    await this.writeRawBytes(bytes);
+    chunks.push(bytes);
+    const total = chunks.reduce((sum, part) => sum + part.length, 0);
+    const output = new Uint8Array(total);
+    let offset = 0;
+    for (const part of chunks) {
+      output.set(part, offset);
+      offset += part.length;
+    }
+    await this.writeRawBytes(output);
   }
 
   /**
@@ -302,7 +362,10 @@ class BluetoothPrinterService {
     const divider = '-'.repeat(width);
     const { business, transaction } = payload;
 
-    let text = '\x1B\x40'; // ESC @: Initialize printer
+    const logoCommand = await this.getLogoRasterCommand(width === 32 ? 384 : 576);
+    const chunks: Uint8Array[] = [new Uint8Array([0x1b, 0x40]), new Uint8Array([0x1b, 0x61, 0x01])];
+    if (logoCommand) chunks.push(logoCommand, new TextEncoder().encode('\n'));
+    let text = '';
     text += '\x1B\x61\x01'; // Center alignment
     text += '\x1D\x21\x11'; // Double height and double width
     text += (business.name || 'RAHAYA COFFEE').toUpperCase() + '\n';
