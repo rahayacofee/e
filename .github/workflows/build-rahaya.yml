@@ -34,7 +34,7 @@ jobs:
 
       - name: Install native Bluetooth Classic plugin for typecheck and web build
         working-directory: app-source
-        run: npm install --no-save --legacy-peer-deps @ascentio-it/capacitor-bluetooth-serial@8.0.1
+        run: npm install --no-save --legacy-peer-deps @capacitor/core @ascentio-it/capacitor-bluetooth-serial@8.0.1
 
       - name: Configure Supabase
         working-directory: app-source
