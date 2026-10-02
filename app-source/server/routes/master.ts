@@ -61,7 +61,12 @@ router.get('/dashboard', (req: AuthenticatedRequest, res: Response) => {
 // GET /api/master/owners
 // List all owners with business details
 router.get('/owners', (req: AuthenticatedRequest, res: Response) => {
-  const owners = db.getAllOwners().map((o) => {
+  const allOwners = db.getAllOwners();
+  const ownerCounts = new Map<string, number>();
+  allOwners.forEach((o) => {
+    if (o.business_id) ownerCounts.set(o.business_id, (ownerCounts.get(o.business_id) || 0) + 1);
+  });
+  const owners = allOwners.map((o) => {
     const biz = o.business_id ? db.getBusiness(o.business_id) : null;
     return {
       id: o.id,
@@ -79,6 +84,7 @@ router.get('/owners', (req: AuthenticatedRequest, res: Response) => {
             address: biz.address,
             phone: biz.phone,
             status: biz.status,
+            owners_count: ownerCounts.get(biz.id) || 0,
           }
         : null,
     };
