@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { RahayaLogo } from '../../components/layout/RahayaLogo';
-import { Lock, User, AlertCircle, ArrowRight, ShieldCheck, Store, UserCheck } from 'lucide-react';
+import { Lock, User, AlertCircle, ArrowRight, Store, UserCheck } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
@@ -23,12 +23,8 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const handleQuickFill = (role: 'MASTER' | 'OWNER' | 'CASHIER') => {
-    if (role === 'MASTER') {
-      // Requirement 4: mdqputra@gmail.com / 990830
-      setUsername('mdqputra@gmail.com');
-      setPassword('990830');
-    } else if (role === 'OWNER') {
+  const handleQuickFill = (role: 'OWNER' | 'CASHIER') => {
+    if (role === 'OWNER') {
       setUsername('owner_rahaya');
       setPassword('RahayaOwner2026!');
     } else if (role === 'CASHIER') {
@@ -125,21 +121,7 @@ export const LoginPage: React.FC = () => {
           <p className="text-[11px] font-semibold text-slate-500 mb-2.5 text-center">
             Pilih Role Akun Terverifikasi:
           </p>
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              type="button"
-              onClick={() => handleQuickFill('MASTER')}
-              className={`p-2 rounded-xl border text-center transition-all ${
-                username === 'mdqputra@gmail.com'
-                  ? 'border-purple-600 bg-purple-50 text-purple-900 font-bold shadow-2xs'
-                  : 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium'
-              }`}
-            >
-              <ShieldCheck className="w-4 h-4 mx-auto mb-1 text-purple-700" />
-              <div className="text-[11px] leading-tight">Master</div>
-              <div className="text-[9px] text-slate-400 mt-0.5">Kelola Owner</div>
-            </button>
-
+          <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
               onClick={() => handleQuickFill('OWNER')}
