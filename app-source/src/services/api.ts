@@ -109,28 +109,36 @@ export const api = {
   },
 };
 
-export function startRealtimeSync(businessId: string | null, isMaster = false) {
-  if (!businessId && !isMaster) return () => {};
-  const tables = ['transactions', 'transaction_items', 'payments', 'products', 'inventory', 'shifts', 'expenses', 'categories'];
-  const channel = supabase.channel('rahaya-live-sync');
-  for (const table of tables) {
-    channel.on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table,
-        ...(businessId ? { filter: `business_id=eq.${businessId}` } : {}),
-      },
-      () => window.dispatchEvent(new CustomEvent('rahaya-data-changed')),
-    );
-  }
-  channel.subscribe();
-  return () => { void supabase.removeChannel(channel); };
+export async function getSyncVersion() {
+  const result = await request<{ version: number; updated_at?: string | null }>('/sync/version');
+  return Number(result.version || 0);
 }
-\n
+
 export function startRealtimeSync(_businessId: string | null, _isMaster = false) {
-  // Auth Rahaya menggunakan session aplikasi sendiri, bukan Supabase Auth.
-  // Sinkronisasi antar perangkat tetap melalui Supabase PostgreSQL + API.
-  return () => {};
+  let stopped = false;
+  let timer: number | null = null;
+  let lastVersion: number | null = null;
+
+  const check = async () => {
+    if (stopped || !getAuthToken()) return;
+    try {
+      const version = await getSyncVersion();
+      if (lastVersion === null) {
+        lastVersion = version;
+      } else if (version !== lastVersion) {
+        lastVersion = version;
+        window.dispatchEvent(new CustomEvent('rahaya-data-changed', { detail: { version } }));
+      }
+    } catch {
+      // Network sementara putus: jangan logout. Percobaan berikutnya akan otomatis jalan.
+    } finally {
+      if (!stopped) timer = window.setTimeout(check, 3000);
+    }
+  };
+
+  void check();
+  return () => {
+    stopped = true;
+    if (timer !== null) window.clearTimeout(timer);
+  };
 }
