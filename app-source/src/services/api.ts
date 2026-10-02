@@ -1,209 +1,125 @@
-const API_BASE = '/api';
+import { createClient } from '@supabase/supabase-js';
 
-function getAuthToken(): string | null {
-  return localStorage.getItem('rahaya_token');
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+
+if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  throw new Error('Supabase belum dikonfigurasi. Pastikan VITE_SUPABASE_URL dan VITE_SUPABASE_PUBLISHABLE_KEY tersedia.');
 }
 
-export function setAuthToken(token: string | null) {
-  if (token) {
-    localStorage.setItem('rahaya_token', token);
-  } else {
-    localStorage.removeItem('rahaya_token');
-  }
-}
+export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+});
 
-async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const token = getAuthToken();
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-  };
-
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  const response = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers,
+async function request<T>(path: string, method = 'GET', body: any = {}): Promise<T> {
+  const { data, error } = await supabase.functions.invoke('rahaya-api', {
+    body: { path, method, body },
   });
-
-  const data = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    const errorMsg = data.error || `Error ${response.status}: Permintaan gagal diproses.`;
-    throw new Error(errorMsg);
-  }
-
+  if (error) throw new Error(error.message || 'Permintaan ke Rahaya API gagal.');
+  if (data?.error) throw new Error(data.error);
   return data as T;
 }
 
+export function setAuthToken(_token: string | null) {}
+
 export const api = {
-  // Auth
-  login: (credentials: { username: string; password: string }) =>
-    request<{ token: string; user: any; business: any }>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(credentials),
-    }),
-
+  login: async (credentials: { username: string; password: string }) => {
+    const result = await request<any>('/auth/login', 'POST', credentials);
+    const { error } = await supabase.auth.setSession({
+      access_token: result.session.access_token,
+      refresh_token: result.session.refresh_token,
+    });
+    if (error) throw new Error(error.message);
+    return result;
+  },
   getMe: () => request<{ user: any; business: any; open_shift: any }>('/auth/me'),
-
   changePassword: (passwords: { old_password: string; new_password: string }) =>
-    request<{ success: boolean; message: string }>('/auth/change-password', {
-      method: 'POST',
-      body: JSON.stringify(passwords),
-    }),
+    request<{ success: boolean; message: string }>('/auth/change-password', 'POST', passwords),
 
-  // Master
   master: {
-    getDashboard: () => request<{ summary: any; recent_owners: any[] }>('/master/dashboard'),
-    getOwners: () => request<{ owners: any[] }>('/master/owners'),
-    createOwner: (data: any) =>
-      request<{ message: string; owner: any; business: any }>('/master/owners', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
-    updateOwner: (id: string, data: any) =>
-      request<{ message: string; owner: any }>(`/master/owners/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(data),
-      }),
+    getDashboard: () => request<any>('/master/dashboard'),
+    getOwners: () => request<any>('/master/owners'),
+    createOwner: (data: any) => request<any>('/master/owners', 'POST', data),
+    updateOwner: (id: string, data: any) => request<any>(`/master/owners/${id}`, 'PUT', data),
     toggleOwnerStatus: (id: string, status: 'ACTIVE' | 'INACTIVE') =>
-      request<{ message: string; status: string }>(`/master/owners/${id}/status`, {
-        method: 'PATCH',
-        body: JSON.stringify({ status }),
-      }),
+      request<any>(`/master/owners/${id}/status`, 'PATCH', { status }),
     resetOwnerPassword: (id: string, new_password: string) =>
-      request<{ message: string }>(`/master/owners/${id}/reset-password`, {
-        method: 'POST',
-        body: JSON.stringify({ new_password }),
-      }),
-    getAuditLogs: () => request<{ logs: any[] }>('/master/audit-logs'),
-    getDatabaseStatus: () => request<any>('/master/database-status'),
+      request<any>(`/master/owners/${id}/reset-password`, 'POST', { new_password }),
+    getAuditLogs: () => request<any>('/master/audit-logs'),
+    getDatabaseStatus: () => request<any>('/database/status'),
   },
 
-  // Owner
   owner: {
     getDashboard: () => request<any>('/owner/dashboard'),
-    getProducts: () => request<{ products: any[]; categories: any[] }>('/owner/products'),
-    createProduct: (data: any) =>
-      request<{ message: string; product: any }>('/owner/products', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
-    updateProduct: (id: string, data: any) =>
-      request<{ message: string; product: any }>(`/owner/products/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(data),
-      }),
-    deleteProduct: (id: string) =>
-      request<{ message: string }>(`/owner/products/${id}`, {
-        method: 'DELETE',
-      }),
-    getCategories: () => request<{ categories: any[] }>('/owner/categories'),
-    createCategory: (data: { name: string; icon?: string }) =>
-      request<{ category: any }>('/owner/categories', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
-    getStock: () => request<{ inventory: any[] }>('/owner/stock'),
-    adjustStock: (data: { product_id: string; type: 'IN' | 'OUT' | 'ADJUSTMENT'; amount: number; notes?: string }) =>
-      request<{ message: string; inventory: any }>('/owner/stock/adjust', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
-    getCashiers: () => request<{ cashiers: any[] }>('/owner/cashiers'),
-    createCashier: (data: any) =>
-      request<{ message: string; cashier: any }>('/owner/cashiers', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
-    updateCashier: (id: string, data: any) =>
-      request<{ message: string; cashier: any }>(`/owner/cashiers/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(data),
-      }),
+    getProducts: () => request<any>('/owner/products'),
+    createProduct: (data: any) => request<any>('/owner/products', 'POST', data),
+    updateProduct: (id: string, data: any) => request<any>(`/owner/products/${id}`, 'PUT', data),
+    deleteProduct: (id: string) => request<any>(`/owner/products/${id}`, 'DELETE'),
+    getCategories: () => request<any>('/owner/categories'),
+    createCategory: (data: any) => request<any>('/owner/categories', 'POST', data),
+    getStock: () => request<any>('/owner/stock'),
+    adjustStock: (data: any) => request<any>('/owner/stock/adjust', 'POST', data),
+    getCashiers: () => request<any>('/owner/cashiers'),
+    createCashier: (data: any) => request<any>('/owner/cashiers', 'POST', data),
+    updateCashier: (id: string, data: any) => request<any>(`/owner/cashiers/${id}`, 'PUT', data),
     toggleCashierStatus: (id: string, status: 'ACTIVE' | 'INACTIVE') =>
-      request<{ message: string }>(`/owner/cashiers/${id}/status`, {
-        method: 'PATCH',
-        body: JSON.stringify({ status }),
-      }),
+      request<any>(`/owner/cashiers/${id}/status`, 'PATCH', { status }),
     resetCashierPassword: (id: string, new_password: string) =>
-      request<{ message: string }>(`/owner/cashiers/${id}/reset-password`, {
-        method: 'POST',
-        body: JSON.stringify({ new_password }),
-      }),
-    getShifts: () => request<{ shifts: any[] }>('/owner/shifts'),
-    getTransactions: () => request<{ transactions: any[] }>('/owner/transactions'),
-    getExpenses: () => request<{ expenses: any[] }>('/owner/expenses'),
-    createExpense: (data: any) =>
-      request<{ message: string; expense: any }>('/owner/expenses', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
-    deleteExpense: (id: string) =>
-      request<{ message: string }>(`/owner/expenses/${id}`, {
-        method: 'DELETE',
-      }),
-    getReports: (params: Record<string, string> = {}) => {
-      const query = new URLSearchParams(params).toString();
-      return request<any>(`/owner/reports${query ? `?${query}` : ''}`);
-    },
-    getSettings: () => request<{ business: any }>('/owner/settings'),
-    updateSettings: (data: any) =>
-      request<{ message: string; business: any }>('/owner/settings', {
-        method: 'PUT',
-        body: JSON.stringify(data),
-      }),
+      request<any>(`/owner/cashiers/${id}/reset-password`, 'POST', { new_password }),
+    getShifts: () => request<any>('/owner/shifts'),
+    getTransactions: () => request<any>('/owner/transactions'),
+    getExpenses: () => request<any>('/owner/expenses'),
+    createExpense: (data: any) => request<any>('/owner/expenses', 'POST', data),
+    deleteExpense: (id: string) => request<any>(`/owner/expenses/${id}`, 'DELETE'),
+    getReports: (params: Record<string, string> = {}) =>
+      request<any>('/owner/reports' + (Object.keys(params).length ? '?' + new URLSearchParams(params).toString() : '')),
+    getSettings: () => request<any>('/owner/settings'),
+    updateSettings: (data: any) => request<any>('/owner/settings', 'PUT', data),
   },
 
-  // Cashier
   cashier: {
-    getCurrentShift: () => request<{ shift: any; has_open_shift: boolean }>('/cashier/shift/current'),
-    openShift: (data: { starting_cash: number; notes?: string }) =>
-      request<{ message: string; shift: any }>('/cashier/shift/open', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
-    closeShift: (data: { actual_cash: number; notes?: string }) =>
-      request<{ message: string; shift: any }>('/cashier/shift/close', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
-    getMyTransactions: () => request<{ transactions: any[] }>('/cashier/transactions'),
-    getReports: (params: Record<string, string> = {}) => {
-      const query = new URLSearchParams(params).toString();
-      return request<any>(`/cashier/reports${query ? `?${query}` : ''}`);
-    },
-    getProfile: () => request<{ user: any; business: any }>('/cashier/profile'),
+    getCurrentShift: () => request<any>('/cashier/shift/current'),
+    openShift: (data: any) => request<any>('/cashier/shift/open', 'POST', data),
+    closeShift: (data: any) => request<any>('/cashier/shift/close', 'POST', data),
+    getMyTransactions: () => request<any>('/cashier/transactions'),
+    getReports: (params: Record<string, string> = {}) =>
+      request<any>('/cashier/reports' + (Object.keys(params).length ? '?' + new URLSearchParams(params).toString() : '')),
+    getProfile: () => request<any>('/cashier/profile'),
   },
 
-  // POS
   pos: {
-    getInitData: () => request<{ business: any; categories: any[]; products: any[]; active_shift: any }>('/pos/init'),
-    createTransaction: (data: any) =>
-      request<{ message: string; transaction: any; receipt: any }>('/pos/transactions', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
+    getInitData: () => request<any>('/pos/init'),
+    createTransaction: (data: any) => request<any>('/pos/transactions', 'POST', data),
   },
 
-  // Database
   database: {
     getStatus: () => request<any>('/database/status'),
-    configure: (data: { supabase_url: string; supabase_key: string }) =>
-      request<{ message: string; test_result: any }>('/database/configure', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
-    test: () => request<{ connected: boolean; message: string }>('/database/test', { method: 'POST' }),
-    syncAll: () => request<{ success: boolean; message: string; counts: any }>('/database/sync-all', { method: 'POST' }),
-    getSchemaSql: async () => {
-      const token = getAuthToken();
-      const res = await fetch(`${API_BASE}/database/schema-sql`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      return res.text();
-    },
+    configure: async (_data: { supabase_url: string; supabase_key: string }) => ({
+      message: 'Rahaya POS sudah terhubung ke Supabase Cloud.',
+      test_result: { connected: true, message: 'Supabase Cloud aktif.' },
+    }),
+    test: () => request<any>('/database/test', 'POST'),
+    syncAll: async () => ({ success: true, message: 'Data utama menggunakan Supabase Cloud.', counts: {} }),
+    getSchemaSql: async () => '-- Schema Rahaya POS dikelola pada Supabase Cloud.',
   },
 };
+
+export function startRealtimeSync(businessId: string | null, isMaster = false) {
+  if (!businessId && !isMaster) return () => {};
+  const tables = ['transactions', 'transaction_items', 'payments', 'products', 'inventory', 'shifts', 'expenses', 'categories'];
+  const channel = supabase.channel('rahaya-live-sync');
+  for (const table of tables) {
+    channel.on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table,
+        ...(businessId ? { filter: `business_id=eq.${businessId}` } : {}),
+      },
+      () => window.dispatchEvent(new CustomEvent('rahaya-data-changed')),
+    );
+  }
+  channel.subscribe();
+  return () => { void supabase.removeChannel(channel); };
+}
