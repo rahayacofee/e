@@ -63,9 +63,9 @@ jobs:
           GITHUB_PAGES: 'false'
         run: npm run build
 
-      - name: Install Capacitor
+      - name: Install Capacitor + Bluetooth Classic plugin
         working-directory: app-source
-        run: npm install --no-save --legacy-peer-deps @capacitor/core @capacitor/cli @capacitor/android
+        run: npm install --no-save --legacy-peer-deps @capacitor/core @capacitor/cli @capacitor/android @ascentio-it/capacitor-bluetooth-serial@8.0.1
 
       - name: Prepare Android
         working-directory: app-source
