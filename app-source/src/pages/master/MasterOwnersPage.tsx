@@ -53,8 +53,11 @@ export const MasterOwnersPage: React.FC = () => {
     setIsLoading(true);
     try {
       const res = await api.master.getOwners();
-      setOwners(Array.isArray(res.owners) ? res.owners : []);
+      const nextOwners = Array.isArray(res.owners) ? res.owners : [];
+      setOwners(nextOwners);
+      setError(null);
     } catch (err: any) {
+      console.error('[Rahaya Master] getOwners failed:', err);
       setError(err.message || 'Gagal memuat data owner');
     } finally {
       setIsLoading(false);
@@ -66,13 +69,18 @@ export const MasterOwnersPage: React.FC = () => {
       const res = await api.master.getBusinesses();
       setBusinesses(Array.isArray(res.businesses) ? res.businesses : []);
     } catch (err: any) {
-      setError(err.message || 'Gagal memuat daftar outlet');
+      console.error('[Rahaya Master] getBusinesses failed:', err);
+      // Outlet dropdown must never hide the Owner list.
     }
   };
 
+  const refreshOwnerData = async () => {
+    await fetchOwners();
+    await fetchBusinesses();
+  };
+
   useEffect(() => {
-    void fetchOwners();
-    void fetchBusinesses();
+    void refreshOwnerData();
   }, []);
 
   const handleCreateOwner = async (e: React.FormEvent) => {
@@ -100,6 +108,15 @@ export const MasterOwnersPage: React.FC = () => {
         throw new Error('Pilih outlet yang sudah ada atau isi nama outlet baru.');
       }
       const res = await api.master.createOwner(payload);
+      if (res?.owner?.id) {
+        setOwners((current) => [
+          res.owner.business ? res.owner : {
+            ...res.owner,
+            business: res.business || null,
+          },
+          ...current.filter((o) => o.id !== res.owner.id),
+        ]);
+      }
       setSuccessMsg(res.message);
       setShowCreateModal(false);
       setNewOwnerForm({
@@ -112,8 +129,7 @@ export const MasterOwnersPage: React.FC = () => {
         business_code: '',
         business_address: '',
       });
-      await fetchOwners();
-      await fetchBusinesses();
+      await refreshOwnerData();
       setTimeout(() => setSuccessMsg(null), 3000);
     } catch (err: any) {
       setError(err.message || 'Gagal membuat owner');
