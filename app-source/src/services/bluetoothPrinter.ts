@@ -339,15 +339,7 @@ class BluetoothPrinterService {
 
     const encoder = new TextEncoder();
     const bytes = encoder.encode(text);
-    chunks.push(bytes);
-    const total = chunks.reduce((sum, part) => sum + part.length, 0);
-    const output = new Uint8Array(total);
-    let offset = 0;
-    for (const part of chunks) {
-      output.set(part, offset);
-      offset += part.length;
-    }
-    await this.writeRawBytes(output);
+    await this.writeRawBytes(bytes);
   }
 
   /**
@@ -440,7 +432,15 @@ class BluetoothPrinterService {
 
     const encoder = new TextEncoder();
     const bytes = encoder.encode(text);
-    await this.writeRawBytes(bytes);
+    chunks.push(bytes);
+    const total = chunks.reduce((sum, part) => sum + part.length, 0);
+    const output = new Uint8Array(total);
+    let offset = 0;
+    for (const part of chunks) {
+      output.set(part, offset);
+      offset += part.length;
+    }
+    await this.writeRawBytes(output);
   }
 }
 
