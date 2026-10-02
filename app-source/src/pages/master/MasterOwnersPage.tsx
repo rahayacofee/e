@@ -15,6 +15,7 @@ import {
 
 export const MasterOwnersPage: React.FC = () => {
   const [owners, setOwners] = useState<any[]>([]);
+  const [businesses, setBusinesses] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +33,7 @@ export const MasterOwnersPage: React.FC = () => {
     password: '',
     full_name: '',
     phone: '',
+    business_id: '',
     business_name: '',
     business_code: '',
     business_address: '',
@@ -51,7 +53,7 @@ export const MasterOwnersPage: React.FC = () => {
     setIsLoading(true);
     try {
       const res = await api.master.getOwners();
-      setOwners(res.owners || []);
+      setOwners(Array.isArray(res.owners) ? res.owners : []);
     } catch (err: any) {
       setError(err.message || 'Gagal memuat data owner');
     } finally {
@@ -59,8 +61,18 @@ export const MasterOwnersPage: React.FC = () => {
     }
   };
 
+  const fetchBusinesses = async () => {
+    try {
+      const res = await api.master.getBusinesses();
+      setBusinesses(Array.isArray(res.businesses) ? res.businesses : []);
+    } catch (err: any) {
+      setError(err.message || 'Gagal memuat daftar outlet');
+    }
+  };
+
   useEffect(() => {
-    fetchOwners();
+    void fetchOwners();
+    void fetchBusinesses();
   }, []);
 
   const handleCreateOwner = async (e: React.FormEvent) => {
@@ -76,6 +88,7 @@ export const MasterOwnersPage: React.FC = () => {
         password: '',
         full_name: '',
         phone: '',
+        business_id: '',
         business_name: '',
         business_code: '',
         business_address: '',
@@ -199,6 +212,7 @@ export const MasterOwnersPage: React.FC = () => {
                 <tr>
                   <th className="py-3 px-4">Owner & Username</th>
                   <th className="py-3 px-4">Nama Bisnis & Kode</th>
+                <th className="py-3 px-4">Owner di Outlet</th>
                   <th className="py-3 px-4">No. Telepon</th>
                   <th className="py-3 px-4">Status Akun</th>
                   <th className="py-3 px-4">Terdaftar</th>
@@ -208,7 +222,7 @@ export const MasterOwnersPage: React.FC = () => {
               <tbody className="divide-y divide-slate-100">
                 {filteredOwners.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-slate-400">
+                    <td colSpan={7} className="py-8 text-center text-slate-400">
                       Tidak ada data owner ditemukan.
                     </td>
                   </tr>
@@ -228,6 +242,11 @@ export const MasterOwnersPage: React.FC = () => {
                         </div>
                       </td>
                       <td className="py-3 px-4 text-slate-600">{owner.phone || '-'}</td>
+                      <td className="py-3 px-4">
+                        <span className="inline-flex px-2 py-1 rounded-lg bg-blue-50 text-blue-800 font-semibold">
+                          {owner.business?.owners_count ?? '-'} Owner
+                        </span>
+                      </td>
                       <td className="py-3 px-4">
                         <button
                           onClick={() => handleToggleStatus(owner)}
@@ -299,7 +318,7 @@ export const MasterOwnersPage: React.FC = () => {
               </button>
             </div>
             <p className="text-xs text-slate-500 mt-2">
-              Akun Owner akan langsung aktif dan terhubung ke tenant bisnis baru miliknya.
+              Akun Owner akan langsung aktif. Anda bisa membuat outlet baru atau menambahkan Owner ke outlet yang sudah ada.
             </p>
             <form onSubmit={handleCreateOwner} className="mt-4 space-y-3">
               <div className="grid grid-cols-2 gap-3">
@@ -370,54 +389,98 @@ export const MasterOwnersPage: React.FC = () => {
 
               <div className="pt-2 border-t border-slate-100">
                 <span className="text-xs font-bold text-blue-900 block mb-2">
-                  Informasi Bisnis / Outlet:
+                  Outlet / Tenant:
                 </span>
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="col-span-2">
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
-                      Nama Bisnis / Outlet *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={newOwnerForm.business_name}
-                      onChange={(e) =>
-                        setNewOwnerForm({ ...newOwnerForm, business_name: e.target.value })
-                      }
-                      placeholder="Rahaya Coffee - Cabang Bandung"
-                      className="w-full px-3 py-2 border rounded-xl text-xs border-slate-200"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
-                      Kode Outlet
-                    </label>
-                    <input
-                      type="text"
-                      value={newOwnerForm.business_code}
-                      onChange={(e) =>
-                        setNewOwnerForm({ ...newOwnerForm, business_code: e.target.value })
-                      }
-                      placeholder="RHY-BDG"
-                      className="w-full px-3 py-2 border rounded-xl text-xs border-slate-200 uppercase"
-                    />
-                  </div>
+
+                <div className="mb-3">
+                  <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                    Pilih Outlet
+                  </label>
+                  <select
+                    value={newOwnerForm.business_id}
+                    onChange={(e) => {
+                      const businessId = e.target.value;
+                      const selected = businesses.find((b) => b.id === businessId);
+                      setNewOwnerForm({
+                        ...newOwnerForm,
+                        business_id: businessId,
+                        business_name: selected?.name || '',
+                        business_code: selected?.code || '',
+                        business_address: selected?.address || '',
+                      });
+                    }}
+                    className="w-full px-3 py-2 border rounded-xl text-xs border-slate-200 bg-white"
+                  >
+                    <option value="">+ Buat outlet baru</option>
+                    {businesses.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name} ({b.code}) — {b.owners_count || 0} Owner
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Pilih outlet yang sudah ada agar beberapa akun Owner dapat memakai outlet yang sama.
+                  </p>
                 </div>
 
-                <div className="mt-2">
-                  <label className="text-[11px] font-bold text-slate-700 block mb-1">
-                    Alamat Outlet
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={newOwnerForm.business_address}
-                    onChange={(e) =>
-                      setNewOwnerForm({ ...newOwnerForm, business_address: e.target.value })
-                    }
-                    placeholder="Jl. Braga No. 12, Bandung"
-                    className="w-full px-3 py-2 border rounded-xl text-xs border-slate-200"
-                  />
-                </div>
+                {newOwnerForm.business_id ? (
+                  <div className="p-3 rounded-xl bg-blue-50 border border-blue-100">
+                    <div className="text-xs font-bold text-blue-900">{newOwnerForm.business_name}</div>
+                    <div className="text-[11px] text-blue-700 mt-0.5">
+                      {newOwnerForm.business_code} · {businesses.find((b) => b.id === newOwnerForm.business_id)?.owners_count || 0} Owner saat ini
+                    </div>
+                    <div className="text-[10px] text-blue-600 mt-1">{newOwnerForm.business_address || 'Alamat belum diisi'}</div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="col-span-2">
+                        <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                          Nama Bisnis / Outlet *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={newOwnerForm.business_name}
+                          onChange={(e) =>
+                            setNewOwnerForm({ ...newOwnerForm, business_name: e.target.value })
+                          }
+                          placeholder="Rahaya Coffee - Cabang Bandung"
+                          className="w-full px-3 py-2 border rounded-xl text-xs border-slate-200"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                          Kode Outlet
+                        </label>
+                        <input
+                          type="text"
+                          value={newOwnerForm.business_code}
+                          onChange={(e) =>
+                            setNewOwnerForm({ ...newOwnerForm, business_code: e.target.value })
+                          }
+                          placeholder="RHY-BDG"
+                          className="w-full px-3 py-2 border rounded-xl text-xs border-slate-200 uppercase"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-2">
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                        Alamat Outlet
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={newOwnerForm.business_address}
+                        onChange={(e) =>
+                          setNewOwnerForm({ ...newOwnerForm, business_address: e.target.value })
+                        }
+                        placeholder="Jl. Braga No. 12, Bandung"
+                        className="w-full px-3 py-2 border rounded-xl text-xs border-slate-200"
+                      />
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-3">
