@@ -260,7 +260,7 @@ class BluetoothPrinterService {
   private async getLogoRasterCommand(maxDots: number): Promise<Uint8Array | null> {
     if (typeof window === 'undefined' || typeof document === 'undefined') return null;
     try {
-      const src = new URL('/icon.svg', import.meta.env.BASE_URL).href;
+      const src = `${import.meta.env.BASE_URL}icon.svg`;
       const response = await fetch(src, { cache: 'force-cache' });
       if (!response.ok) return null;
       const blob = await response.blob();
