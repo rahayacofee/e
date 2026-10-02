@@ -1,0 +1,13 @@
+name: Rahaya Build Check
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: test -f app-source/package.json
+      - run: echo "Rahaya source detected"
