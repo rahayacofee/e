@@ -12,6 +12,7 @@ import {
   CheckCircle,
   AlertCircle,
   FolderPlus,
+  Upload,
 } from 'lucide-react';
 
 export const OwnerProductsPage: React.FC = () => {
@@ -48,6 +49,7 @@ export const OwnerProductsPage: React.FC = () => {
   });
 
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isUploadingImage, setIsUploadingImage] = useState<boolean>(false);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -101,6 +103,35 @@ export const OwnerProductsPage: React.FC = () => {
       image_url: p.image_url,
     });
     setShowProductModal(true);
+  };
+
+  const handleImageUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      setError('File harus berupa gambar.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Ukuran gambar maksimal 5 MB.');
+      return;
+    }
+    setIsUploadingImage(true);
+    setError(null);
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('Gagal membaca file gambar.'));
+        reader.readAsDataURL(file);
+      });
+      const res = await api.owner.uploadProductImage(base64, file.name, file.type);
+      setProductForm((prev) => ({ ...prev, image_url: res.url }));
+      setSuccessMsg('Gambar produk berhasil diunggah.');
+      setTimeout(() => setSuccessMsg(null), 2500);
+    } catch (err: any) {
+      setError(err.message || 'Gagal mengunggah gambar.');
+    } finally {
+      setIsUploadingImage(false);
+    }
   };
 
   const handleSubmitProduct = async (e: React.FormEvent) => {
@@ -441,16 +472,20 @@ export const OwnerProductsPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-slate-700 block mb-1">
-                  URL Gambar Foto Menu
-                </label>
-                <input
-                  type="url"
-                  value={productForm.image_url}
-                  onChange={(e) => setProductForm({ ...productForm, image_url: e.target.value })}
-                  placeholder="https://images.unsplash.com/..."
-                  className="w-full px-3 py-2 border rounded-xl text-xs border-slate-200"
-                />
+                <label className="text-[11px] font-bold text-slate-700 block mb-1">Foto Produk</label>
+                <div className="flex gap-3 items-center">
+                  <div className="w-16 h-16 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 shrink-0">
+                    {productForm.image_url ? <img src={productForm.image_url} alt="Preview" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[9px] text-slate-400">No Image</div>}
+                  </div>
+                  <div className="flex-1 space-y-1.5">
+                    <label className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 cursor-pointer">
+                      <Upload className="w-4 h-4" />
+                      {isUploadingImage ? 'Mengunggah...' : 'Upload Gambar'}
+                      <input type="file" accept="image/*" className="hidden" disabled={isUploadingImage} onChange={(e) => { const file=e.target.files?.[0]; if(file) handleImageUpload(file); e.currentTarget.value=''; }} />
+                    </label>
+                    <p className="text-[10px] text-slate-400">JPG, PNG, WebP • maksimal 5 MB</p>
+                  </div>
+                </div>
               </div>
 
               <div>
@@ -466,8 +501,21 @@ export const OwnerProductsPage: React.FC = () => {
                 />
               </div>
 
-              {!editingProduct && (
-                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
+              <div className="pt-2 border-t border-slate-100">
+                <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={!productForm.track_inventory}
+                    onChange={(e) => setProductForm({ ...productForm, track_inventory: !e.target.checked })}
+                    className="rounded"
+                  />
+                  Stok Unlimited / Tidak terbatas
+                </label>
+                <p className="text-[10px] text-slate-400 mt-1">Produk tetap bisa dijual tanpa mengurangi stok.</p>
+              </div>
+
+              {!editingProduct && productForm.track_inventory && (
+                <div className="grid grid-cols-2 gap-3 pt-2">
                   <div>
                     <label className="text-[11px] font-bold text-slate-700 block mb-1">
                       Stok Awal
