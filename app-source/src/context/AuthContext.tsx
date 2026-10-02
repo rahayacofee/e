@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { User, Business, Shift } from '../types';
-import { api, supabase, startRealtimeSync } from '../services/api';
+import { api, getAuthToken, setAuthToken, startRealtimeSync } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
@@ -22,6 +22,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const realtimeCleanup = useRef<(() => void) | null>(null);
 
+  const clearSession = () => {
+    setAuthToken(null);
+    realtimeCleanup.current?.();
+    realtimeCleanup.current = null;
+    setUser(null);
+    setBusiness(null);
+    setActiveShift(null);
+  };
+
   const setupRealtime = (nextUser: any) => {
     realtimeCleanup.current?.();
     realtimeCleanup.current = startRealtimeSync(nextUser?.business_id || null, nextUser?.role === 'MASTER');
@@ -35,45 +44,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setActiveShift(data.open_shift || null);
       setupRealtime(data.user);
     } catch {
-      await supabase.auth.signOut().catch(() => undefined);
-      realtimeCleanup.current?.();
-      realtimeCleanup.current = null;
-      setUser(null);
-      setBusiness(null);
-      setActiveShift(null);
+      clearSession();
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    let mounted = true;
-    const boot = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!mounted) return;
-      if (data.session) {
-        await refreshMe();
-      } else {
-        setIsLoading(false);
-      }
-    };
-    void boot();
-
-    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!mounted) return;
-      if (event === 'SIGNED_OUT' || !session) {
-        realtimeCleanup.current?.();
-        realtimeCleanup.current = null;
-        setUser(null);
-        setBusiness(null);
-        setActiveShift(null);
-        setIsLoading(false);
-      }
-    });
+    if (getAuthToken()) void refreshMe();
+    else setIsLoading(false);
 
     return () => {
-      mounted = false;
-      listener.subscription.unsubscribe();
       realtimeCleanup.current?.();
     };
   }, []);
@@ -97,12 +78,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    realtimeCleanup.current?.();
-    realtimeCleanup.current = null;
-    void supabase.auth.signOut();
-    setUser(null);
-    setBusiness(null);
-    setActiveShift(null);
+    const token = getAuthToken();
+    if (token) void fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/rahaya-api`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ path: '/auth/logout', method: 'POST', body: {} }),
+    }).catch(() => undefined);
+    clearSession();
   };
 
   return (
