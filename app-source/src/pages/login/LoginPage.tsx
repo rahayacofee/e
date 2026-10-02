@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { RahayaLogo } from '../../components/layout/RahayaLogo';
-import { Lock, User, AlertCircle, ArrowRight, Store, UserCheck } from 'lucide-react';
+import { Lock, User, AlertCircle, ArrowRight } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
-  const [username, setUsername] = useState('owner_rahaya');
-  const [password, setPassword] = useState('RahayaOwner2026!');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -23,19 +23,8 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const handleQuickFill = (role: 'OWNER' | 'CASHIER') => {
-    if (role === 'OWNER') {
-      setUsername('owner_rahaya');
-      setPassword('RahayaOwner2026!');
-    } else if (role === 'CASHIER') {
-      setUsername('kasir_1');
-      setPassword('Kasir123!');
-    }
-  };
-
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 bg-slate-900 select-none relative overflow-hidden">
-      {/* Background Ambience */}
       <div className="absolute inset-0 opacity-15 pointer-events-none">
         <img
           src="https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1600&q=80"
@@ -45,7 +34,6 @@ export const LoginPage: React.FC = () => {
       </div>
 
       <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200/80 p-6 sm:p-8 z-10 animate-in fade-in zoom-in-95 duration-200">
-        {/* Logo and Brand Title */}
         <div className="flex flex-col items-center text-center mb-6">
           <div className="p-2 mb-2">
             <RahayaLogo size="lg" showText={false} />
@@ -115,42 +103,6 @@ export const LoginPage: React.FC = () => {
             {!isLoading && <ArrowRight className="w-4 h-4" />}
           </button>
         </form>
-
-        {/* Quick Demo Credentials Switcher */}
-        <div className="mt-6 pt-5 border-t border-slate-100">
-          <p className="text-[11px] font-semibold text-slate-500 mb-2.5 text-center">
-            Pilih Role Akun Terverifikasi:
-          </p>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => handleQuickFill('OWNER')}
-              className={`p-2 rounded-xl border text-center transition-all ${
-                username === 'owner_rahaya'
-                  ? 'border-blue-600 bg-blue-50 text-blue-900 font-bold shadow-2xs'
-                  : 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium'
-              }`}
-            >
-              <Store className="w-4 h-4 mx-auto mb-1 text-blue-700" />
-              <div className="text-[11px] leading-tight">Owner</div>
-              <div className="text-[9px] text-slate-400 mt-0.5">Full Tenant</div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleQuickFill('CASHIER')}
-              className={`p-2 rounded-xl border text-center transition-all ${
-                username === 'kasir_1'
-                  ? 'border-emerald-600 bg-emerald-50 text-emerald-900 font-bold shadow-2xs'
-                  : 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium'
-              }`}
-            >
-              <UserCheck className="w-4 h-4 mx-auto mb-1 text-emerald-700" />
-              <div className="text-[11px] leading-tight">Cashier</div>
-              <div className="text-[9px] text-slate-400 mt-0.5">POS & Shift</div>
-            </button>
-          </div>
-        </div>
 
         <div className="mt-5 text-center text-[10px] text-slate-400">
           Enkripsi Kata Sandi Bcrypt • Multi-Tenant Terisolasi • Supabase PostgreSQL
