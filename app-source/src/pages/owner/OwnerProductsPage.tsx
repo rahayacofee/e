@@ -341,7 +341,7 @@ export const OwnerProductsPage: React.FC = () => {
                               {p.current_stock ?? 0} porsi
                             </span>
                           ) : (
-                            <span className="text-slate-400">Tidak dilacak</span>
+                            <span className="font-bold text-emerald-700">∞ Unlimited</span>
                           )}
                         </td>
                         <td className="py-3 px-4">
