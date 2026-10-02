@@ -26,6 +26,7 @@ export const BluetoothPrinterModal: React.FC<BluetoothPrinterModalProps> = ({ is
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const [isTesting, setIsTesting] = useState<boolean>(false);
   const [copiedUrl, setCopiedUrl] = useState<boolean>(false);
+  const [availableDevices, setAvailableDevices] = useState<PrinterDevice[]>([]);
   const [statusMessage, setStatusMessage] = useState<{
     type: 'success' | 'error' | 'info';
     text: string;
@@ -39,6 +40,7 @@ export const BluetoothPrinterModal: React.FC<BluetoothPrinterModalProps> = ({ is
       setDevice(bluetoothPrinter.getConnectedDevice());
       setPaperWidth(bluetoothPrinter.getPaperWidth());
       setStatusMessage(null);
+      setAvailableDevices([]);
     }
   }, [isOpen]);
 
@@ -48,28 +50,42 @@ export const BluetoothPrinterModal: React.FC<BluetoothPrinterModalProps> = ({ is
     setIsScanning(true);
     setStatusMessage(null);
     try {
-      const connected = await bluetoothPrinter.connect();
-      setDevice(connected);
-      setStatusMessage({
-        type: 'success',
-        text: `Berhasil terhubung ke ${connected.name}! Printer siap digunakan.`,
-      });
+      if (bluetoothPrinter.isNativeAvailable()) {
+        const devices = await bluetoothPrinter.getAvailableDevices();
+        setAvailableDevices(devices);
+        if (devices.length === 0) {
+          throw new Error('Tidak ada printer yang sudah dipasangkan. Pasangkan printer thermal melalui Pengaturan Bluetooth Android, lalu tekan Scan & Pasangkan.');
+        }
+        if (devices.length === 1) {
+          const connected = await bluetoothPrinter.connectToDevice(devices[0]);
+          setDevice(connected);
+          setAvailableDevices([]);
+          setStatusMessage({ type: 'success', text: `Berhasil terhubung ke ${connected.name}! Printer siap digunakan.` });
+        } else {
+          setStatusMessage({ type: 'info', text: 'Pilih printer thermal dari daftar perangkat yang sudah dipasangkan di bawah.' });
+        }
+      } else {
+        const connected = await bluetoothPrinter.connect();
+        setDevice(connected);
+        setStatusMessage({ type: 'success', text: `Berhasil terhubung ke ${connected.name}! Printer siap digunakan.` });
+      }
     } catch (err: any) {
-      const isBlocked =
-        err.isIframeBlocked ||
-        err.message?.toLowerCase().includes('permissions policy') ||
-        err.message?.toLowerCase().includes('disallowed');
+      const isBlocked = err.isIframeBlocked || err.message?.toLowerCase().includes('permissions policy') || err.message?.toLowerCase().includes('disallowed');
+      setStatusMessage({ type: 'error', text: isBlocked ? 'Browser Chrome memblokir Bluetooth karena aplikasi berjalan di dalam frame preview AI Studio. Buka aplikasi di Tab Mandiri.' : err.message || 'Gagal memindai atau menghubungkan printer Bluetooth.', isIframeBlocked: isBlocked });
+    } finally { setIsScanning(false); }
+  };
 
-      setStatusMessage({
-        type: 'error',
-        text: isBlocked
-          ? 'Browser Chrome memblokir Bluetooth karena aplikasi berjalan di dalam frame preview AI Studio (Permissions Policy). Buka aplikasi di Tab Mandiri agar HP Android dapat langsung mendeteksi printer Bluetooth.'
-          : err.message || 'Gagal memindai atau menghubungkan printer Bluetooth.',
-        isIframeBlocked: isBlocked,
-      });
-    } finally {
-      setIsScanning(false);
-    }
+  const handleSelectDevice = async (selected: PrinterDevice) => {
+    setIsScanning(true);
+    setStatusMessage(null);
+    try {
+      const connected = await bluetoothPrinter.connectToDevice(selected);
+      setDevice(connected);
+      setAvailableDevices([]);
+      setStatusMessage({ type: 'success', text: `Berhasil terhubung ke ${connected.name}! Printer siap digunakan.` });
+    } catch (err: any) {
+      setStatusMessage({ type: 'error', text: err.message || 'Gagal menghubungkan printer.' });
+    } finally { setIsScanning(false); }
   };
 
   const handleDisconnect = async () => {
@@ -242,6 +258,19 @@ export const BluetoothPrinterModal: React.FC<BluetoothPrinterModalProps> = ({ is
             )}
           </div>
 
+          {availableDevices.length > 1 && (
+            <div className="p-3 rounded-2xl border border-teal-200 bg-teal-50 space-y-2">
+              <div className="font-bold text-teal-900 text-xs">Pilih Printer Thermal</div>
+              {availableDevices.map((item) => (
+                <button key={item.id} type="button" onClick={() => handleSelectDevice(item)} disabled={isScanning} className="w-full p-3 rounded-xl bg-white border border-teal-100 hover:border-teal-400 text-left flex items-center gap-3 disabled:opacity-50">
+                  <Bluetooth className="w-4 h-4 text-[#005f56]" />
+                  <span className="font-semibold text-slate-800 flex-1">{item.name}</span>
+                  <span className="text-[9px] text-slate-400 font-mono">{item.id}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Paper Width Selection: 58mm vs 80mm */}
           <div>
             <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-2">
@@ -325,9 +354,9 @@ export const BluetoothPrinterModal: React.FC<BluetoothPrinterModalProps> = ({ is
           <div className="pt-2 border-t border-slate-100 text-[10px] text-slate-500 space-y-1">
             <p className="font-semibold text-slate-700">Panduan Koneksi Printer Thermal:</p>
             <ul className="list-disc list-inside space-y-0.5 text-slate-500">
-              <li>Nyalakan Bluetooth & Lokasi pada HP/Tablet Android.</li>
-              <li>Nyalakan printer thermal (lampu power/status biru atau hijau).</li>
-              <li>Buka di Tab Mandiri atau install PWA agar Chrome memberikan izin Bluetooth langsung.</li>
+              <li>Nyalakan Bluetooth pada HP/Tablet Android.</li>
+              <li>Untuk APK: pasangkan printer thermal sekali melalui Pengaturan Bluetooth Android.</li>
+              <li>Tekan <strong>Scan & Pasangkan</strong>, lalu pilih printer thermal.</li>
             </ul>
           </div>
         </div>
