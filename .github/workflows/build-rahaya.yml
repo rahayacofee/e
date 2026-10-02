@@ -1,8 +1,9 @@
-name: Build Rahaya Coffee POS - Online Supabase
+name: Rahaya Coffee POS Build
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -12,92 +13,69 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    defaults:
-      run:
-        working-directory: app-source
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
 
       - name: Install dependencies
+        working-directory: app-source
         run: npm install --legacy-peer-deps
 
       - name: Configure Supabase
+        working-directory: app-source
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
         run: |
-          set -euo pipefail
-          test -n "$SUPABASE_URL" || { echo "ERROR: GitHub Secret SUPABASE_URL belum diisi."; exit 1; }
-          test -n "$SUPABASE_PUBLISHABLE_KEY" || { echo "ERROR: GitHub Secret SUPABASE_PUBLISHABLE_KEY belum diisi."; exit 1; }
-          cat > .env.production <<EOF
-VITE_SUPABASE_URL=$SUPABASE_URL
-VITE_SUPABASE_PUBLISHABLE_KEY=$SUPABASE_PUBLISHABLE_KEY
-EOF
+          set -e
+          test -n "$SUPABASE_URL"
+          test -n "$SUPABASE_PUBLISHABLE_KEY"
+          printf 'VITE_SUPABASE_URL=%s\nVITE_SUPABASE_PUBLISHABLE_KEY=%s\n' "$SUPABASE_URL" "$SUPABASE_PUBLISHABLE_KEY" > .env.production
 
       - name: Typecheck
+        working-directory: app-source
         run: npm run lint
 
       - name: Build web
-        run: |
-          set -euo pipefail
-          npm run build
-          test -d dist
+        working-directory: app-source
+        run: npm run build
 
-      - name: Prepare Capacitor Android
+      - name: Install Capacitor
+        working-directory: app-source
+        run: npm install --no-save --legacy-peer-deps @capacitor/core @capacitor/cli @capacitor/android
+
+      - name: Prepare Android
+        working-directory: app-source
         run: |
-          set -euo pipefail
-          npm install --no-save --legacy-peer-deps @capacitor/core @capacitor/cli @capacitor/android
+          set -e
           if [ ! -f capacitor.config.json ] && [ ! -f capacitor.config.ts ]; then
-            cat > capacitor.config.json <<EOF
-{
-  "appId": "com.rahayacoffee.pos",
-  "appName": "Rahaya Coffee POS",
-  "webDir": "dist",
-  "bundledWebRuntime": false
-}
-EOF
+            printf '%s\n' '{' '  "appId": "com.rahayacoffee.pos",' '  "appName": "Rahaya Coffee POS",' '  "webDir": "dist",' '  "bundledWebRuntime": false' '}' > capacitor.config.json
           fi
-          if [ ! -d android ]; then
-            npx cap add android
-          fi
+          test -d android || npx cap add android
           npx cap sync android
 
-      - name: Build Android APK
+      - name: Build APK
         working-directory: app-source/android
         run: |
-          set -euo pipefail
           chmod +x gradlew
           ./gradlew assembleDebug --stacktrace
 
-      - name: Collect APK
-        working-directory: .
-        run: |
-          set -euo pipefail
-          mkdir -p artifacts
-          find app-source/android -type f -name '*.apk' -print -exec cp {} artifacts/ \;
-          test -n "$(find artifacts -type f -name '*.apk' -print -quit)"
-
-      - name: Upload Android APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: rahaya-coffee-pos-apk
-          path: artifacts/*.apk
+          path: app-source/android/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
 
-      - name: Upload web build
+      - name: Upload web
         uses: actions/upload-artifact@v4
         with:
           name: rahaya-coffee-pos-web
