@@ -1,3 +1,4 @@
+import { BluetoothSerial } from '@ascentio-it/capacitor-bluetooth-serial';
 /**
  * RAHAYA COFFEE POS - Bluetooth Thermal Printer ESC/POS Service
  * Supports 58mm (32 chars) and 80mm (48 chars) ESC/POS Bluetooth printers
@@ -50,6 +51,7 @@ class BluetoothPrinterService {
   private characteristic: any = null;
   private paperWidth: PaperWidth = '58mm';
   private isConnecting = false;
+  private nativeConnectedAddress: string | null = null;
 
   // Well-known thermal printer Bluetooth BLE service and characteristic UUIDs
   private readonly PRINTER_SERVICES = [
@@ -67,8 +69,40 @@ class BluetoothPrinterService {
     }
   }
 
+  private isNativeAndroid(): boolean {
+    return typeof window !== 'undefined' && !!(window as any).Capacitor?.isNativePlatform?.();
+  }
+
+  public isNativeAvailable(): boolean { return this.isNativeAndroid(); }
+
   public isSupported(): boolean {
-    return typeof navigator !== 'undefined' && 'bluetooth' in navigator;
+    return this.isNativeAndroid() || (typeof navigator !== 'undefined' && 'bluetooth' in navigator);
+  }
+
+  public async getAvailableDevices(): Promise<PrinterDevice[]> {
+    if (!this.isNativeAndroid()) return [];
+    try {
+      await BluetoothSerial.checkBluetoothPermissions();
+    } catch { /* enable() below can request permissions */ }
+    const enabled = await BluetoothSerial.isEnabled();
+    if (!enabled.enabled) {
+      await BluetoothSerial.enable();
+    }
+    const result = await BluetoothSerial.getPairedDevices();
+    return (result.devices || []).map((d: any) => ({
+      id: d.address || d.id,
+      name: d.name || 'Bluetooth Printer',
+      connected: false,
+    }));
+  }
+
+  public async connectToDevice(device: PrinterDevice): Promise<PrinterDevice> {
+    if (!this.isNativeAndroid()) return this.connect();
+    await BluetoothSerial.connectInsecure({ address: device.id });
+    this.nativeConnectedAddress = device.id;
+    localStorage.setItem('rahaya_last_printer_id', device.id);
+    localStorage.setItem('rahaya_last_printer_name', device.name);
+    return { ...device, connected: true };
   }
 
   public getPaperWidth(): PaperWidth {
@@ -81,11 +115,19 @@ class BluetoothPrinterService {
   }
 
   public isConnected(): boolean {
+    if (this.isNativeAndroid()) return !!this.nativeConnectedAddress;
     return !!(this.device && this.device.gatt && this.device.gatt.connected && this.characteristic);
   }
 
   public getConnectedDevice(): PrinterDevice | null {
     if (!this.isConnected()) return null;
+    if (this.isNativeAndroid()) {
+      return {
+        id: this.nativeConnectedAddress || localStorage.getItem('rahaya_last_printer_id') || '',
+        name: localStorage.getItem('rahaya_last_printer_name') || 'Bluetooth Printer',
+        connected: true,
+      };
+    }
     return {
       id: this.device.id,
       name: this.device.name || 'Thermal Bluetooth Printer',
@@ -116,6 +158,14 @@ class BluetoothPrinterService {
 
     this.isConnecting = true;
     try {
+      if (this.isNativeAndroid()) {
+        const devices = await this.getAvailableDevices();
+        if (!devices.length) {
+          throw new Error('Tidak ada printer yang sudah dipasangkan. Pasangkan printer thermal di Pengaturan Bluetooth Android terlebih dahulu.');
+        }
+        if (devices.length === 1) return await this.connectToDevice(devices[0]);
+        throw new Error('MULTIPLE_PRINTERS');
+      }
       // Prompt Android Bluetooth picker
       const navBluetooth = (navigator as any).bluetooth;
       if (!navBluetooth || !navBluetooth.requestDevice) {
@@ -214,6 +264,15 @@ class BluetoothPrinterService {
   }
 
   public async disconnect() {
+    if (this.isNativeAndroid()) {
+      try {
+        if (this.nativeConnectedAddress) await BluetoothSerial.disconnect({ address: this.nativeConnectedAddress });
+      } catch { /* already disconnected */ }
+      this.nativeConnectedAddress = null;
+      this.device = null;
+      this.characteristic = null;
+      return;
+    }
     if (this.device && this.device.gatt && this.device.gatt.connected) {
       this.device.gatt.disconnect();
     }
@@ -225,6 +284,18 @@ class BluetoothPrinterService {
    * Send binary data in small chunks (64 bytes) to avoid BLE MTU buffer overrun
    */
   private async writeRawBytes(bytes: Uint8Array): Promise<void> {
+    if (this.isNativeAndroid()) {
+      if (!this.nativeConnectedAddress) throw new Error('Printer Bluetooth belum terhubung.');
+      const chunkSize = 180;
+      let binary = '';
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
+        binary += String.fromCharCode(...chunk);
+      }
+      const value = btoa(binary);
+      await BluetoothSerial.write({ address: this.nativeConnectedAddress, value });
+      return;
+    }
     if (!this.characteristic) {
       throw new Error('Printer Bluetooth belum terhubung.');
     }
