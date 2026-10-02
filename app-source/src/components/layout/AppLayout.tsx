@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { TopHeader } from './TopHeader';
 import { RoleSidebar } from './RoleSidebar';
@@ -47,6 +47,16 @@ export const AppLayout: React.FC = () => {
   };
 
   const [currentTab, setCurrentTab] = useState<string>(getDefaultTab());
+  const [contentKey, setContentKey] = useState(0);
+
+  useEffect(() => {
+    const onDataChanged = () => {
+      // POS menjaga keranjang tetap aman; halaman lain dapat dimuat ulang datanya.
+      if (currentTab !== 'pos') setContentKey((k) => k + 1);
+    };
+    window.addEventListener('rahaya-data-changed', onDataChanged);
+    return () => window.removeEventListener('rahaya-data-changed', onDataChanged);
+  }, [currentTab]);
   const [showOpenShiftModal, setShowOpenShiftModal] = useState<boolean>(false);
   const [showCloseShiftModal, setShowCloseShiftModal] = useState<boolean>(false);
 
@@ -140,7 +150,7 @@ export const AppLayout: React.FC = () => {
               : 'p-3 sm:p-5 lg:p-6 max-w-7xl mx-auto w-full mb-16 md:mb-0'
           }`}
         >
-          {renderContent()}
+          <React.Fragment key={contentKey}>{renderContent()}</React.Fragment>
         </main>
       </div>
 
