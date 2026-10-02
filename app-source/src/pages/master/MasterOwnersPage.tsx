@@ -242,12 +242,12 @@ export const MasterOwnersPage: React.FC = () => {
                           {owner.business?.code || '-'}
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-slate-600">{owner.phone || '-'}</td>
                       <td className="py-3 px-4">
                         <span className="inline-flex px-2 py-1 rounded-lg bg-blue-50 text-blue-800 font-semibold">
-                          {owner.business?.owners_count ?? '-'} Owner
+                          {owner.business?.owners_count ?? 0} Owner
                         </span>
                       </td>
+                      <td className="py-3 px-4 text-slate-600">{owner.phone || '-'}</td>
                       <td className="py-3 px-4">
                         <button
                           onClick={() => handleToggleStatus(owner)}
