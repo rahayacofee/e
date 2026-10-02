@@ -1,0 +1,636 @@
+{
+  "businesses": [
+    {
+      "id": "biz-rahaya-01",
+      "name": "Rahaya Coffee - Flagship Store",
+      "code": "RAHAYA-PUSAT",
+      "address": "Jl. Surya Kencana No. 45, Sentra Kuliner, Jakarta Selatan",
+      "phone": "+62 812-9876-5432",
+      "tax_percentage": 10,
+      "service_percentage": 0,
+      "receipt_header": "RAHAYA COFFEE - ARTISAN ESPRESSO & ROASTERY\nNikmati Setiap Tegukan Kopi Terbaik",
+      "receipt_footer": "Terima kasih atas kunjungan Anda!\nFollow Instagram: @rahayacoffee\nWiFi Password: rahayacoffee",
+      "currency_symbol": "Rp",
+      "status": "ACTIVE",
+      "created_at": "2026-10-02T08:25:46.845Z",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    }
+  ],
+  "users": [
+    {
+      "id": "usr-master-01",
+      "business_id": null,
+      "username": "mdqputra@gmail.com",
+      "password_hash": "$2b$10$i.NyyepvM0har06ZqIjTieSF5EjEZof.A5WHdP66GwTQeSG/0ou4a",
+      "full_name": "Master Administrator (MDQ Putra)",
+      "role": "MASTER",
+      "phone": "+62 811-990-830",
+      "status": "ACTIVE",
+      "last_login_at": "2026-10-02T09:42:21.253Z",
+      "created_at": "2026-10-02T08:25:46.845Z",
+      "updated_at": "2026-10-02T09:42:21.253Z"
+    },
+    {
+      "id": "usr-owner-01",
+      "business_id": "biz-rahaya-01",
+      "username": "owner_rahaya",
+      "password_hash": "$2b$10$9Cq7hPypLTpqvfjYsJ2IQugeew9KhtFxFTLoHDzdOUve.cggMbsXC",
+      "full_name": "Rian Raharja (Owner Rahaya)",
+      "role": "OWNER",
+      "phone": "+62 812-3333-4444",
+      "status": "ACTIVE",
+      "last_login_at": "2026-10-02T09:42:15.675Z",
+      "created_at": "2026-10-02T08:25:46.845Z",
+      "updated_at": "2026-10-02T09:42:15.675Z"
+    },
+    {
+      "id": "usr-cashier-01",
+      "business_id": "biz-rahaya-01",
+      "username": "kasir_1",
+      "password_hash": "$2b$10$9Cq7hPypLTpqvfjYsJ2IQuZB96WYNgbSxY7/EX9Mwy5aA1sMQk6Km",
+      "full_name": "Dimas Barista Kasir",
+      "role": "CASHIER",
+      "phone": "+62 857-1111-2222",
+      "status": "ACTIVE",
+      "last_login_at": null,
+      "created_at": "2026-10-02T08:25:46.845Z",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    }
+  ],
+  "categories": [
+    {
+      "id": "cat-coffee",
+      "business_id": "biz-rahaya-01",
+      "name": "Coffee",
+      "icon": "Coffee",
+      "sort_order": 1,
+      "created_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "cat-non-coffee",
+      "business_id": "biz-rahaya-01",
+      "name": "Non Coffee",
+      "icon": "CupSoda",
+      "sort_order": 2,
+      "created_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "cat-food",
+      "business_id": "biz-rahaya-01",
+      "name": "Food",
+      "icon": "Utensils",
+      "sort_order": 3,
+      "created_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "cat-snack",
+      "business_id": "biz-rahaya-01",
+      "name": "Snack",
+      "icon": "Cookie",
+      "sort_order": 4,
+      "created_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "cat-dessert",
+      "business_id": "biz-rahaya-01",
+      "name": "Dessert",
+      "icon": "Cake",
+      "sort_order": 5,
+      "created_at": "2026-10-02T08:25:46.845Z"
+    }
+  ],
+  "products": [
+    {
+      "id": "prod-01",
+      "business_id": "biz-rahaya-01",
+      "category_id": "cat-coffee",
+      "name": "Kopi Susu Rahaya Gula Aren",
+      "sku": "RHY-COF-01",
+      "description": "Signature espresso Rahaya blend, fresh milk, and organic palm sugar syrup with creamy texture.",
+      "price": 24000,
+      "cost_price": 9500,
+      "track_inventory": true,
+      "image_url": "https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=300&q=80",
+      "status": "ACTIVE",
+      "created_at": "2026-10-02T08:25:46.845Z",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "prod-02",
+      "business_id": "biz-rahaya-01",
+      "category_id": "cat-coffee",
+      "name": "Rahaya Sea Salt Caramel Cloud",
+      "sku": "RHY-COF-02",
+      "description": "Double shot espresso, velvety sweet caramel foam with a hint of artisan sea salt.",
+      "price": 28000,
+      "cost_price": 11500,
+      "track_inventory": true,
+      "image_url": "https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?auto=format&fit=crop&w=300&q=80",
+      "status": "ACTIVE",
+      "created_at": "2026-10-02T08:25:46.845Z",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "prod-03",
+      "business_id": "biz-rahaya-01",
+      "category_id": "cat-coffee",
+      "name": "Americano / Long Black (Ice/Hot)",
+      "sku": "RHY-COF-03",
+      "description": "Clean, bold espresso extracted with Rahaya Arabica-Robusta balanced profile.",
+      "price": 20000,
+      "cost_price": 5000,
+      "track_inventory": true,
+      "image_url": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80",
+      "status": "ACTIVE",
+      "created_at": "2026-10-02T08:25:46.845Z",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "prod-04",
+      "business_id": "biz-rahaya-01",
+      "category_id": "cat-coffee",
+      "name": "Caffe Latte Creamy",
+      "sku": "RHY-COF-04",
+      "description": "Smooth steamed milk microfoam over balanced single origin espresso.",
+      "price": 25000,
+      "cost_price": 9000,
+      "track_inventory": true,
+      "image_url": "https://images.unsplash.com/photo-1570968915860-54d5c301fa9f?auto=format&fit=crop&w=300&q=80",
+      "status": "ACTIVE",
+      "created_at": "2026-10-02T08:25:46.845Z",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "prod-05",
+      "business_id": "biz-rahaya-01",
+      "category_id": "cat-coffee",
+      "name": "Cappuccino Cinnamon Sprinkle",
+      "sku": "RHY-COF-05",
+      "description": "Classic equal third parts espresso, steamed milk, and airy foam with Ceylon cinnamon.",
+      "price": 25000,
+      "cost_price": 9000,
+      "track_inventory": true,
+      "image_url": "https://images.unsplash.com/photo-1534778101976-62847782c213?auto=format&fit=crop&w=300&q=80",
+      "status": "ACTIVE",
+      "created_at": "2026-10-02T08:25:46.845Z",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "prod-06",
+      "business_id": "biz-rahaya-01",
+      "category_id": "cat-coffee",
+      "name": "V60 Aceh Gayo Single Origin",
+      "sku": "RHY-COF-06",
+      "description": "Filter manual brew using light-medium roast Gayo beans. Notes of stone fruits and bergamot.",
+      "price": 32000,
+      "cost_price": 13000,
+      "track_inventory": true,
+      "image_url": "https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=300&q=80",
+      "status": "ACTIVE",
+      "created_at": "2026-10-02T08:25:46.845Z",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "prod-07",
+      "business_id": "biz-rahaya-01",
+      "category_id": "cat-non-coffee",
+      "name": "Matcha Uji Artisan Latte",
+      "sku": "RHY-NON-01",
+      "description": "Authentic stone-ground Japanese ceremonial grade matcha whisked with fresh whole milk.",
+      "price": 28000,
+      "cost_price": 11000,
+      "track_inventory": true,
+      "image_url": "https://images.unsplash.com/photo-1536256263959-770b48d82b0a?auto=format&fit=crop&w=300&q=80",
+      "status": "ACTIVE",
+      "created_at": "2026-10-02T08:25:46.845Z",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "prod-08",
+      "business_id": "biz-rahaya-01",
+      "category_id": "cat-non-coffee",
+      "name": "Belgian Dark Chocolate Ganache",
+      "sku": "RHY-NON-02",
+      "description": "70% premium Belgian dark chocolate melted with velvety milk, soothing and deep.",
+      "price": 27000,
+      "cost_price": 10500,
+      "track_inventory": true,
+      "image_url": "https://images.unsplash.com/photo-1542990253-0d0f5be5f0ed?auto=format&fit=crop&w=300&q=80",
+      "status": "ACTIVE",
+      "created_at": "2026-10-02T08:25:46.845Z",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "prod-09",
+      "business_id": "biz-rahaya-01",
+      "category_id": "cat-non-coffee",
+      "name": "Earl Grey Artisan Milk Tea",
+      "sku": "RHY-NON-03",
+      "description": "Fragrant bergamot black tea brewed slowly with rich milk and brown sugar.",
+      "price": 24000,
+      "cost_price": 8500,
+      "track_inventory": true,
+      "image_url": "https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=300&q=80",
+      "status": "ACTIVE",
+      "created_at": "2026-10-02T08:25:46.845Z",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "prod-10",
+      "business_id": "biz-rahaya-01",
+      "category_id": "cat-food",
+      "name": "Nasi Goreng Spesial Rahaya",
+      "sku": "RHY-FOD-01",
+      "description": "Nasi goreng harum rempah khas dengan potongan ayam, telur mata sapi, dan acar segar.",
+      "price": 35000,
+      "cost_price": 14000,
+      "track_inventory": true,
+      "image_url": "https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=300&q=80",
+      "status": "ACTIVE",
+      "created_at": "2026-10-02T08:25:46.845Z",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "prod-11",
+      "business_id": "biz-rahaya-01",
+      "category_id": "cat-food",
+      "name": "Rice Bowl Beef Black Pepper",
+      "sku": "RHY-FOD-02",
+      "description": "Irisan daging sapi empuk saus lada hitam pedas manis di atas nasi hangat.",
+      "price": 38000,
+      "cost_price": 16000,
+      "track_inventory": true,
+      "image_url": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=300&q=80",
+      "status": "ACTIVE",
+      "created_at": "2026-10-02T08:25:46.845Z",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "prod-12",
+      "business_id": "biz-rahaya-01",
+      "category_id": "cat-snack",
+      "name": "Crispy Truffle Fries",
+      "sku": "RHY-SNK-01",
+      "description": "Kentang goreng renyah dengan taburan keju parmesan dan aroma minyak truffle wangi.",
+      "price": 28000,
+      "cost_price": 11000,
+      "track_inventory": true,
+      "image_url": "https://images.unsplash.com/photo-1576107232684-1279f3908594?auto=format&fit=crop&w=300&q=80",
+      "status": "ACTIVE",
+      "created_at": "2026-10-02T08:25:46.845Z",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "prod-13",
+      "business_id": "biz-rahaya-01",
+      "category_id": "cat-snack",
+      "name": "Cireng Crispy Bumbu Rujak",
+      "sku": "RHY-SNK-02",
+      "description": "Cireng kenyal renyah khas Bandung disajikan dengan cocolan sambal rujak manis pedas.",
+      "price": 18000,
+      "cost_price": 6000,
+      "track_inventory": true,
+      "image_url": "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=300&q=80",
+      "status": "ACTIVE",
+      "created_at": "2026-10-02T08:25:46.845Z",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "prod-14",
+      "business_id": "biz-rahaya-01",
+      "category_id": "cat-dessert",
+      "name": "French Butter Croissant",
+      "sku": "RHY-DES-01",
+      "description": "Pastry klasik Prancis berlapis mentega harum dengan tekstur renyah dan lembut di dalam.",
+      "price": 22000,
+      "cost_price": 9000,
+      "track_inventory": true,
+      "image_url": "https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=300&q=80",
+      "status": "ACTIVE",
+      "created_at": "2026-10-02T08:25:46.845Z",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "prod-15",
+      "business_id": "biz-rahaya-01",
+      "category_id": "cat-dessert",
+      "name": "Almond Pain au Chocolat",
+      "sku": "RHY-DES-02",
+      "description": "Pastry cokelat artisan berlapis kacang almond panggang renyah dan taburan gula halus.",
+      "price": 26000,
+      "cost_price": 11000,
+      "track_inventory": true,
+      "image_url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=300&q=80",
+      "status": "ACTIVE",
+      "created_at": "2026-10-02T08:25:46.845Z",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "prod-16",
+      "business_id": "biz-rahaya-01",
+      "category_id": "cat-dessert",
+      "name": "Basque Burnt Cheesecake Slice",
+      "sku": "RHY-DES-03",
+      "description": "Kue keju panggang Spanyol bertekstur lumer lembut dengan aroma karamel panggangan khas.",
+      "price": 32000,
+      "cost_price": 13000,
+      "track_inventory": true,
+      "image_url": "https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&w=300&q=80",
+      "status": "ACTIVE",
+      "created_at": "2026-10-02T08:25:46.845Z",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    }
+  ],
+  "inventory": [
+    {
+      "id": "inv-prod-01",
+      "business_id": "biz-rahaya-01",
+      "product_id": "prod-01",
+      "current_stock": 120,
+      "min_stock_alert": 15,
+      "unit": "porsi",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "inv-prod-02",
+      "business_id": "biz-rahaya-01",
+      "product_id": "prod-02",
+      "current_stock": 85,
+      "min_stock_alert": 15,
+      "unit": "porsi",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "inv-prod-03",
+      "business_id": "biz-rahaya-01",
+      "product_id": "prod-03",
+      "current_stock": 250,
+      "min_stock_alert": 15,
+      "unit": "porsi",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "inv-prod-04",
+      "business_id": "biz-rahaya-01",
+      "product_id": "prod-04",
+      "current_stock": 140,
+      "min_stock_alert": 15,
+      "unit": "porsi",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "inv-prod-05",
+      "business_id": "biz-rahaya-01",
+      "product_id": "prod-05",
+      "current_stock": 110,
+      "min_stock_alert": 15,
+      "unit": "porsi",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "inv-prod-06",
+      "business_id": "biz-rahaya-01",
+      "product_id": "prod-06",
+      "current_stock": 45,
+      "min_stock_alert": 15,
+      "unit": "porsi",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "inv-prod-07",
+      "business_id": "biz-rahaya-01",
+      "product_id": "prod-07",
+      "current_stock": 75,
+      "min_stock_alert": 15,
+      "unit": "porsi",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "inv-prod-08",
+      "business_id": "biz-rahaya-01",
+      "product_id": "prod-08",
+      "current_stock": 80,
+      "min_stock_alert": 15,
+      "unit": "porsi",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "inv-prod-09",
+      "business_id": "biz-rahaya-01",
+      "product_id": "prod-09",
+      "current_stock": 90,
+      "min_stock_alert": 15,
+      "unit": "porsi",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "inv-prod-10",
+      "business_id": "biz-rahaya-01",
+      "product_id": "prod-10",
+      "current_stock": 40,
+      "min_stock_alert": 15,
+      "unit": "porsi",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "inv-prod-11",
+      "business_id": "biz-rahaya-01",
+      "product_id": "prod-11",
+      "current_stock": 35,
+      "min_stock_alert": 15,
+      "unit": "porsi",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "inv-prod-12",
+      "business_id": "biz-rahaya-01",
+      "product_id": "prod-12",
+      "current_stock": 50,
+      "min_stock_alert": 15,
+      "unit": "porsi",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "inv-prod-13",
+      "business_id": "biz-rahaya-01",
+      "product_id": "prod-13",
+      "current_stock": 40,
+      "min_stock_alert": 15,
+      "unit": "porsi",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "inv-prod-14",
+      "business_id": "biz-rahaya-01",
+      "product_id": "prod-14",
+      "current_stock": 25,
+      "min_stock_alert": 15,
+      "unit": "porsi",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "inv-prod-15",
+      "business_id": "biz-rahaya-01",
+      "product_id": "prod-15",
+      "current_stock": 20,
+      "min_stock_alert": 15,
+      "unit": "porsi",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "inv-prod-16",
+      "business_id": "biz-rahaya-01",
+      "product_id": "prod-16",
+      "current_stock": 18,
+      "min_stock_alert": 15,
+      "unit": "porsi",
+      "updated_at": "2026-10-02T08:25:46.845Z"
+    }
+  ],
+  "inventory_logs": [],
+  "shifts": [
+    {
+      "id": "shift-01",
+      "business_id": "biz-rahaya-01",
+      "cashier_user_id": "usr-cashier-01",
+      "cashier_name": "Dimas Barista Kasir",
+      "status": "OPEN",
+      "opened_at": "2026-10-02T04:25:47.174Z",
+      "closed_at": null,
+      "starting_cash": 250000,
+      "expected_cash": 298000,
+      "actual_cash": null,
+      "cash_difference": null,
+      "notes": "Shift Pagi buka lancar. Kembalian kasir 250.000.",
+      "total_transactions": 1,
+      "total_sales_amount": 48000
+    }
+  ],
+  "transactions": [
+    {
+      "id": "trx-sample-01",
+      "invoice_number": "INV-20261002-0001",
+      "business_id": "biz-rahaya-01",
+      "shift_id": "shift-01",
+      "cashier_user_id": "usr-cashier-01",
+      "cashier_name": "Dimas Barista Kasir",
+      "customer_name": "Budi Santoso",
+      "order_type": "DINE_IN",
+      "table_number": "Meja 04",
+      "subtotal": 48000,
+      "tax_amount": 4800,
+      "service_amount": 0,
+      "discount_amount": 0,
+      "total_amount": 52800,
+      "payment_method": "QRIS",
+      "payment_status": "COMPLETED",
+      "amount_paid": 52800,
+      "change_amount": 0,
+      "notes": "Less ice pada Kopi Susu",
+      "created_at": "2026-10-02T06:25:47.174Z"
+    }
+  ],
+  "transaction_items": [
+    {
+      "id": "titem-01",
+      "transaction_id": "trx-sample-01",
+      "business_id": "biz-rahaya-01",
+      "product_id": "prod-01",
+      "product_name": "Kopi Susu Rahaya Gula Aren",
+      "product_sku": "RHY-SIG-01",
+      "unit_price": 24000,
+      "cost_price": 9500,
+      "quantity": 2,
+      "subtotal": 48000,
+      "notes": "Less sweet & extra creamy"
+    }
+  ],
+  "payments": [
+    {
+      "id": "pay-01",
+      "business_id": "biz-rahaya-01",
+      "transaction_id": "trx-sample-01",
+      "payment_method": "QRIS",
+      "amount": 52800,
+      "reference_code": "QRIS-NMID-93821039",
+      "status": "SUCCESS",
+      "created_at": "2026-10-02T06:25:47.174Z"
+    }
+  ],
+  "expenses": [
+    {
+      "id": "exp-01",
+      "business_id": "biz-rahaya-01",
+      "shift_id": "shift-01",
+      "user_id": "usr-owner-01",
+      "title": "Beli Es Batu Kristal 5 Bag",
+      "category": "Bahan Baku",
+      "amount": 60000,
+      "notes": "Beli darurat di agen es terdekat karena cuaca panas siang",
+      "date": "2026-10-02",
+      "created_at": "2026-10-02T07:25:47.174Z"
+    }
+  ],
+  "audit_logs": [
+    {
+      "id": "log-01",
+      "business_id": null,
+      "user_id": "usr-master-01",
+      "user_role": "MASTER",
+      "action": "SYSTEM_BOOTSTRAP",
+      "details": "Initial database schema and Master account provisioned.",
+      "ip_address": "127.0.0.1",
+      "created_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "log-02",
+      "business_id": "biz-rahaya-01",
+      "user_id": "usr-owner-01",
+      "user_role": "OWNER",
+      "action": "TENANT_INITIALIZED",
+      "details": "Tenant \"Rahaya Coffee - Flagship Store\" initialized with master menu & products.",
+      "ip_address": "127.0.0.1",
+      "created_at": "2026-10-02T08:25:46.845Z"
+    },
+    {
+      "id": "log-03",
+      "business_id": "biz-rahaya-01",
+      "user_id": "usr-cashier-01",
+      "user_role": "CASHIER",
+      "action": "OPEN_SHIFT",
+      "details": "Kasir membuka shift pagi dengan modal awal Rp 250.000",
+      "ip_address": "127.0.0.1",
+      "created_at": "2026-10-02T04:25:47.174Z"
+    },
+    {
+      "business_id": "biz-rahaya-01",
+      "user_id": "usr-owner-01",
+      "user_role": "OWNER",
+      "action": "USER_LOGIN",
+      "details": "User owner_rahaya (OWNER) berhasil login.",
+      "ip_address": "127.0.0.1",
+      "id": "log-7355133c-f703-439e-9ba2-126ce1a894b6",
+      "created_at": "2026-10-02T08:25:55.271Z"
+    },
+    {
+      "business_id": "biz-rahaya-01",
+      "user_id": "usr-owner-01",
+      "user_role": "OWNER",
+      "action": "USER_LOGIN",
+      "details": "User owner_rahaya (OWNER) berhasil login.",
+      "ip_address": "127.0.0.1",
+      "id": "log-86602383-962b-4717-8f28-8d05223ebfe7",
+      "created_at": "2026-10-02T09:42:15.678Z"
+    },
+    {
+      "business_id": null,
+      "user_id": "usr-master-01",
+      "user_role": "MASTER",
+      "action": "USER_LOGIN",
+      "details": "User mdqputra@gmail.com (MASTER) berhasil login.",
+      "ip_address": "127.0.0.1",
+      "id": "log-4118a6d1-b10d-4a97-b62f-551193bbfd3e",
+      "created_at": "2026-10-02T09:42:21.255Z"
+    }
+  ]
+}

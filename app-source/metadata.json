@@ -1,0 +1,6 @@
+{
+  "name": "RAHAYA COFFEE POS",
+  "description": "Aplikasi Point of Sale (POS) F&B Multi-tenant production-ready untuk Rahaya Coffee dengan peran Master, Owner, dan Cashier, manajemen stok, shift, transaksi, dan integrasi database.",
+  "requestFramePermissions": ["bluetooth"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
