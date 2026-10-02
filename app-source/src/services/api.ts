@@ -65,6 +65,7 @@ export const api = {
   owner: {
     getDashboard: () => request<any>('/owner/dashboard'),
     getProducts: () => request<any>('/owner/products'),
+    uploadProductImage: (data_url: string, file_name: string, content_type: string) => request<any>('/owner/product-image', 'POST', { data_url, file_name, content_type }),
     createProduct: (data: any) => request<any>('/owner/products', 'POST', data),
     updateProduct: (id: string, data: any) => request<any>(`/owner/products/${id}`, 'PUT', data),
     deleteProduct: (id: string) => request<any>(`/owner/products/${id}`, 'DELETE'),
