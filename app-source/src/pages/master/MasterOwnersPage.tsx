@@ -93,7 +93,8 @@ export const MasterOwnersPage: React.FC = () => {
         business_code: '',
         business_address: '',
       });
-      fetchOwners();
+      await fetchOwners();
+      await fetchBusinesses();
       setTimeout(() => setSuccessMsg(null), 3000);
     } catch (err: any) {
       setError(err.message || 'Gagal membuat owner');
