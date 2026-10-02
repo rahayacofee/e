@@ -1,11 +1,15 @@
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+import { createClient } from '@supabase/supabase-js';
 
 if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
   throw new Error('Supabase belum dikonfigurasi. Pastikan VITE_SUPABASE_URL dan VITE_SUPABASE_PUBLISHABLE_KEY tersedia.');
 }
 
 const API_URL = `${SUPABASE_URL}/functions/v1/rahaya-api`;
+const realtimeClient = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: { persistSession: false, autoRefreshToken: false },
+});
 // Rahaya custom session token; Supabase Auth is intentionally not used.
 const TOKEN_KEY = 'rahaya_app_token';
 
@@ -123,11 +127,38 @@ export async function getSyncVersion() {
   return Number(result.version || 0);
 }
 
-export function startRealtimeSync(_businessId: string | null, _isMaster = false) {
+export function startRealtimeSync(businessId: string | null, isMaster = false) {
   let stopped = false;
   let timer: number | null = null;
   let lastVersion: number | null = null;
+  let realtimeReady = false;
 
+  const emitChanged = (detail: any = {}) => {
+    if (stopped) return;
+    window.dispatchEvent(new CustomEvent('rahaya-data-changed', { detail }));
+  };
+
+  const topic = isMaster ? 'rahaya:master' : businessId ? `rahaya:${businessId}` : null;
+  const channel = topic
+    ? realtimeClient
+        .channel(topic, { config: { broadcast: { self: false } } })
+        .on('broadcast', { event: 'data_changed' }, (payload) => {
+          realtimeReady = true;
+          emitChanged(payload?.payload || { realtime: true });
+        })
+    : null;
+
+  if (channel) {
+    channel.subscribe((status) => {
+      realtimeReady = status === 'SUBSCRIBED';
+      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+        realtimeReady = false;
+      }
+    });
+  }
+
+  // Polling remains as a safety net so data still refreshes if WebSocket/RealtIme
+  // is temporarily unavailable. Normal updates arrive immediately through Broadcast.
   const check = async () => {
     if (stopped || !getAuthToken()) return;
     try {
@@ -136,12 +167,12 @@ export function startRealtimeSync(_businessId: string | null, _isMaster = false)
         lastVersion = version;
       } else if (version !== lastVersion) {
         lastVersion = version;
-        window.dispatchEvent(new CustomEvent('rahaya-data-changed', { detail: { version } }));
+        if (!realtimeReady) emitChanged({ version, fallback: true });
       }
     } catch {
-      // Network sementara putus: jangan logout. Percobaan berikutnya akan otomatis jalan.
+      // Network sementara putus: jangan logout. Realtime/polling akan mencoba lagi.
     } finally {
-      if (!stopped) timer = window.setTimeout(check, 3000);
+      if (!stopped) timer = window.setTimeout(check, 5000);
     }
   };
 
@@ -149,5 +180,6 @@ export function startRealtimeSync(_businessId: string | null, _isMaster = false)
   return () => {
     stopped = true;
     if (timer !== null) window.clearTimeout(timer);
+    if (channel) void realtimeClient.removeChannel(channel);
   };
 }
