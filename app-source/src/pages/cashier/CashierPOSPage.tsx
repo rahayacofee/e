@@ -77,6 +77,9 @@ export const CashierPOSPage: React.FC<CashierPOSPageProps> = ({ onNavigateHome }
 
   useEffect(() => {
     fetchCatalog();
+    const onDataChanged = () => { void fetchCatalog(); };
+    window.addEventListener('rahaya-data-changed', onDataChanged);
+    return () => window.removeEventListener('rahaya-data-changed', onDataChanged);
   }, []);
 
   const filteredProducts = products.filter((p) => {
