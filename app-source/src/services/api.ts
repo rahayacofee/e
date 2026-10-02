@@ -6,7 +6,7 @@ if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
 }
 
 const API_URL = `${SUPABASE_URL}/functions/v1/rahaya-api`;
-const TOKEN_KEY = 'rahaya_app_token';
+// Rahaya custom session token; Supabase Auth is intentionally not used.\nconst TOKEN_KEY = 'rahaya_app_token';
 
 export function getAuthToken() {
   return localStorage.getItem(TOKEN_KEY);
