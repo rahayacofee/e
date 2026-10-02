@@ -10,7 +10,6 @@ import {
   Store,
   Database,
   RefreshCw,
-  CheckCircle2,
 } from 'lucide-react';
 
 export const OwnerSettingsPage: React.FC = () => {
