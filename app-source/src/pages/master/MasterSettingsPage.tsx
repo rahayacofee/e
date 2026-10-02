@@ -176,12 +176,12 @@ export const MasterSettingsPage: React.FC = () => {
                   : 'bg-amber-50 text-amber-800 border border-amber-200'
               }`}
             >
-              {dbStatus?.supabase?.connected ? 'Terhubung Online' : 'Klien Siap Digunakan'}
+              {dbStatus?.supabase?.connected ? 'Terhubung Online' : 'Tidak Terhubung'}
             </span>
           </div>
 
           <p className="text-xs text-slate-600 leading-relaxed">
-            Sistem menggunakan custom JWT auth di backend dan mengakses Supabase PostgreSQL menggunakan <strong>Anon / Public Key</strong> saja. Tidak pernah menggunakan atau mengekspos <code>service_role key</code>.
+            Frontend hanya menggunakan <strong>Supabase Publishable / Public Key</strong>. Akses database PostgreSQL dilakukan aman melalui Edge Function server-side; secret key tidak pernah dikirim ke browser.
           </p>
 
           <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 text-[11px] font-mono space-y-1">
