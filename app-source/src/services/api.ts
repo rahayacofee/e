@@ -1,5 +1,3 @@
-import { createClient } from '@supabase/supabase-js';
-
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 
@@ -7,54 +5,39 @@ if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
   throw new Error('Supabase belum dikonfigurasi. Pastikan VITE_SUPABASE_URL dan VITE_SUPABASE_PUBLISHABLE_KEY tersedia.');
 }
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
-});
+const API_URL = `${SUPABASE_URL}/functions/v1/rahaya-api`;
+const TOKEN_KEY = 'rahaya_app_token';
 
-async function request<T>(path: string, method = 'GET', body: any = {}): Promise<T> {
-  const { data, error } = await supabase.functions.invoke('rahaya-api', {
-    body: { path, method, body },
-  });
-
-  if (error) {
-    let message = error.message || 'Permintaan ke Rahaya API gagal.';
-    try {
-      const context = (error as any).context;
-      if (context?.json) {
-        const payload = await context.json();
-        if (payload?.error) message = payload.error;
-      }
-    } catch {
-      // Keep the original Functions error when the response is not JSON.
-    }
-    throw new Error(message);
-  }
-
-  if (data?.error) throw new Error(String(data.error));
-  return data as T;
+export function getAuthToken() {
+  return localStorage.getItem(TOKEN_KEY);
 }
 
-export function setAuthToken(_token: string | null) {}
+export function setAuthToken(token: string | null) {
+  if (token) localStorage.setItem(TOKEN_KEY, token);
+  else localStorage.removeItem(TOKEN_KEY);
+}
+
+async function request<T>(path: string, method = 'GET', body: any = {}): Promise<T> {
+  const token = getAuthToken();
+  const headers: Record<string,string> = {
+    'Content-Type': 'application/json',
+    'apikey': SUPABASE_PUBLISHABLE_KEY,
+  };
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const response = await fetch(API_URL, { method, headers, body: JSON.stringify({ path, method, body }) });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || data?.error) throw new Error(data?.error || `Server Rahaya mengembalikan HTTP ${response.status}.`);
+  return data as T;
+}
 
 export const api = {
   login: async (credentials: { username: string; password: string }) => {
     const result = await request<any>('/auth/login', 'POST', credentials);
-    const { error } = await supabase.auth.setSession({
-      access_token: result.session.access_token,
-      refresh_token: result.session.refresh_token,
-    });
-    if (error) throw new Error(error.message);
+    setAuthToken(result.token);
     return result;
   },
-  getMe: async () => {
-    const { data: sessionData } = await supabase.auth.getSession();
-    if (!sessionData.session) throw new Error('Sesi Supabase tidak ditemukan. Silakan login kembali.');
-
-    const { data: authData, error: authError } = await supabase.auth.getUser();
-    if (authError || !authData.user) throw new Error('Sesi Supabase tidak valid atau sudah kedaluwarsa.');
-
-    return request<{ user: any; business: any; open_shift: any }>('/auth/me');
-  },
+  getMe: () => request<{ user: any; business: any; open_shift: any }>('/auth/me'),
   changePassword: (passwords: { old_password: string; new_password: string }) =>
     request<{ success: boolean; message: string }>('/auth/change-password', 'POST', passwords),
 
@@ -144,4 +127,10 @@ export function startRealtimeSync(businessId: string | null, isMaster = false) {
   }
   channel.subscribe();
   return () => { void supabase.removeChannel(channel); };
+}
+\n
+export function startRealtimeSync(_businessId: string | null, _isMaster = false) {
+  // Auth Rahaya menggunakan session aplikasi sendiri, bukan Supabase Auth.
+  // Sinkronisasi antar perangkat tetap melalui Supabase PostgreSQL + API.
+  return () => {};
 }
