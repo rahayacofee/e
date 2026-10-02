@@ -62,7 +62,7 @@ jobs:
           elif [ -f bun.lock ] || [ -f bun.lockb ]; then
             npm install
           else
-            npm install
+            npm install --legacy-peer-deps
           fi
 
       - name: Build web application
