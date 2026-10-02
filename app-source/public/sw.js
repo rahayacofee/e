@@ -1,45 +1,35 @@
-const CACHE_NAME = 'rahaya-pos-v1';
-const STATIC_ASSETS = ['/', '/index.html', '/manifest.webmanifest'];
+const CACHE_NAME = 'rahaya-pos-v2';
+const STATIC_ASSETS = ['/manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
   );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
-      );
-    })
+    caches.keys().then((keys) => Promise.all(
+      keys.map((key) => key === CACHE_NAME ? undefined : caches.delete(key))
+    ))
   );
   self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests and skip API / WebSocket calls
-  if (event.request.method !== 'GET' || event.request.url.includes('/api/')) {
+  if (event.request.method !== 'GET' || event.request.url.includes('/functions/v1/rahaya-api')) return;
+
+  // Always fetch the HTML shell from the network first so a new deployment
+  // cannot leave the browser running an old JavaScript bundle.
+  if (event.request.mode === 'navigate' || event.request.url.endsWith('/index.html')) {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request).then((cached) => cached || caches.match('/index.html')))
+    );
     return;
   }
+
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      return (
-        cachedResponse ||
-        fetch(event.request).catch(() => {
-          if (event.request.mode === 'navigate') {
-            return caches.match('/index.html');
-          }
-        })
-      );
-    })
+    fetch(event.request).catch(() => caches.match(event.request))
   );
 });
