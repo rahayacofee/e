@@ -80,7 +80,26 @@ export const MasterOwnersPage: React.FC = () => {
     setIsSubmitting(true);
     setError(null);
     try {
-      const res = await api.master.createOwner(newOwnerForm);
+      const payload = {
+        ...newOwnerForm,
+        username: newOwnerForm.username.trim(),
+        password: newOwnerForm.password,
+        full_name: newOwnerForm.full_name.trim(),
+        phone: newOwnerForm.phone.trim(),
+        business_name: newOwnerForm.business_name.trim(),
+        business_code: newOwnerForm.business_code.trim(),
+        business_address: newOwnerForm.business_address.trim(),
+      };
+      if (!payload.username || !payload.password || !payload.full_name) {
+        throw new Error('Username, password, dan nama lengkap wajib diisi.');
+      }
+      if (payload.password.length < 6) {
+        throw new Error('Password minimal 6 karakter.');
+      }
+      if (!payload.business_id && !payload.business_name) {
+        throw new Error('Pilih outlet yang sudah ada atau isi nama outlet baru.');
+      }
+      const res = await api.master.createOwner(payload);
       setSuccessMsg(res.message);
       setShowCreateModal(false);
       setNewOwnerForm({
