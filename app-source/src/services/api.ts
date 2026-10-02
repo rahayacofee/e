@@ -15,8 +15,22 @@ async function request<T>(path: string, method = 'GET', body: any = {}): Promise
   const { data, error } = await supabase.functions.invoke('rahaya-api', {
     body: { path, method, body },
   });
-  if (error) throw new Error(error.message || 'Permintaan ke Rahaya API gagal.');
-  if (data?.error) throw new Error(data.error);
+
+  if (error) {
+    let message = error.message || 'Permintaan ke Rahaya API gagal.';
+    try {
+      const context = (error as any).context;
+      if (context?.json) {
+        const payload = await context.json();
+        if (payload?.error) message = payload.error;
+      }
+    } catch {
+      // Keep the original Functions error when the response is not JSON.
+    }
+    throw new Error(message);
+  }
+
+  if (data?.error) throw new Error(String(data.error));
   return data as T;
 }
 
@@ -32,7 +46,15 @@ export const api = {
     if (error) throw new Error(error.message);
     return result;
   },
-  getMe: () => request<{ user: any; business: any; open_shift: any }>('/auth/me'),
+  getMe: async () => {
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) throw new Error('Sesi Supabase tidak ditemukan. Silakan login kembali.');
+
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData.user) throw new Error('Sesi Supabase tidak valid atau sudah kedaluwarsa.');
+
+    return request<{ user: any; business: any; open_shift: any }>('/auth/me');
+  },
   changePassword: (passwords: { old_password: string; new_password: string }) =>
     request<{ success: boolean; message: string }>('/auth/change-password', 'POST', passwords),
 
